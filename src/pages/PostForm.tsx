@@ -24,9 +24,18 @@ const PostForm = () => {
   const [expiryDate, setExpiryDate] = useState<Date>();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const navigate = useNavigate();
-  const { session } = useAuth();
+  const { session, user } = useAuth();
 
-  if (!session) {
+  // Fill dummy data for testing
+  const fillDummyData = () => {
+    setTitle('Simple Feedback Form');
+    setDescription('A simple form to collect feedback from users about our services');
+    setFormUrl('https://forms.google.com/example-form');
+    setTags(['feedback', 'survey']);
+    setExpiryDate(new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)); // 30 days from now
+  };
+
+  if (!session || !user) {
     return (
       <div className="max-w-2xl mx-auto">
         <Card className="border-slate-200 shadow-lg">
@@ -58,19 +67,32 @@ const PostForm = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
+    console.log('Form submission started');
+    console.log('Session:', session);
+    console.log('User:', user);
+    
     if (!title || !description || !formUrl || !expiryDate) {
       toast.error('Please fill in all required fields');
       return;
     }
 
-    if (!formUrl.includes('forms.google.com') && !formUrl.includes('docs.google.com/forms')) {
-      toast.error('Please enter a valid Google Forms URL');
+    if (!session?.user) {
+      toast.error('You must be logged in to post a form');
       return;
     }
 
     setIsSubmitting(true);
     try {
-      const { error } = await supabase
+      console.log('Inserting form with data:', {
+        user_id: session.user.id,
+        title,
+        description,
+        google_form_url: formUrl,
+        tags,
+        expire_at: expiryDate.toISOString()
+      });
+
+      const { data, error } = await supabase
         .from('forms')
         .insert({
           user_id: session.user.id,
@@ -79,15 +101,20 @@ const PostForm = () => {
           google_form_url: formUrl,
           tags,
           expire_at: expiryDate.toISOString()
-        });
+        })
+        .select();
 
-      if (error) throw error;
+      if (error) {
+        console.error('Database error:', error);
+        throw error;
+      }
 
+      console.log('Form posted successfully:', data);
       toast.success('Form posted successfully!');
       navigate('/feed');
     } catch (error) {
       console.error('Error posting form:', error);
-      toast.error('Failed to post form');
+      toast.error(`Failed to post form: ${error instanceof Error ? error.message : 'Unknown error'}`);
     } finally {
       setIsSubmitting(false);
     }
@@ -101,6 +128,14 @@ const PostForm = () => {
           <CardDescription>
             Share your Google Form with the SurvEase community
           </CardDescription>
+          <Button 
+            type="button" 
+            onClick={fillDummyData}
+            variant="outline"
+            className="self-start"
+          >
+            Fill Dummy Data (for testing)
+          </Button>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-6">
@@ -141,7 +176,7 @@ const PostForm = () => {
                 required
               />
               <p className="text-sm text-slate-500">
-                Make sure your Google Form is set to public and accepts responses
+                For testing, any URL starting with https:// will work
               </p>
             </div>
 

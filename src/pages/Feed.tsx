@@ -33,10 +33,15 @@ const Feed = () => {
   const [filterTag, setFilterTag] = useState('all');
   const [forms, setForms] = useState<Form[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const { session } = useAuth();
 
   const fetchForms = async () => {
     try {
+      setLoading(true);
+      setError(null);
+      console.log('Fetching forms...');
+
       // First get forms with form_fills
       const { data: formsData, error: formsError } = await supabase
         .from('forms')
@@ -46,27 +51,52 @@ const Feed = () => {
         `)
         .order('created_at', { ascending: false });
 
-      if (formsError) throw formsError;
+      if (formsError) {
+        console.error('Forms error:', formsError);
+        throw formsError;
+      }
+
+      console.log('Forms data:', formsData);
+
+      if (!formsData || formsData.length === 0) {
+        console.log('No forms found');
+        setForms([]);
+        return;
+      }
 
       // Then get profiles for each form's user_id
       const formsWithProfiles = await Promise.all(
-        (formsData || []).map(async (form) => {
-          const { data: profile } = await supabase
-            .from('profiles')
-            .select('name')
-            .eq('id', form.user_id)
-            .single();
+        formsData.map(async (form) => {
+          try {
+            const { data: profile, error: profileError } = await supabase
+              .from('profiles')
+              .select('name')
+              .eq('id', form.user_id)
+              .maybeSingle();
 
-          return {
-            ...form,
-            profiles: profile
-          };
+            if (profileError) {
+              console.warn('Profile error for user', form.user_id, ':', profileError);
+            }
+
+            return {
+              ...form,
+              profiles: profile || { name: 'Unknown User' }
+            };
+          } catch (err) {
+            console.warn('Error fetching profile for form', form.id, ':', err);
+            return {
+              ...form,
+              profiles: { name: 'Unknown User' }
+            };
+          }
         })
       );
 
+      console.log('Forms with profiles:', formsWithProfiles);
       setForms(formsWithProfiles);
     } catch (error) {
       console.error('Error fetching forms:', error);
+      setError(error instanceof Error ? error.message : 'Failed to load forms');
     } finally {
       setLoading(false);
     }
@@ -85,7 +115,27 @@ const Feed = () => {
     return matchesSearch && matchesTag;
   });
 
-  const transformedForms = filteredForms.map(form => ({
+  const sortedForms = [...filteredForms].sort((a, b) => {
+    switch (sortBy) {
+      case 'oldest':
+        return new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
+      case 'rating':
+        const aRating = a.form_fills.length > 0 ? 
+          a.form_fills.reduce((sum, fill) => sum + fill.rating, 0) / a.form_fills.length : 0;
+        const bRating = b.form_fills.length > 0 ? 
+          b.form_fills.reduce((sum, fill) => sum + fill.rating, 0) / b.form_fills.length : 0;
+        return bRating - aRating;
+      case 'expiring':
+        if (!a.expire_at && !b.expire_at) return 0;
+        if (!a.expire_at) return 1;
+        if (!b.expire_at) return -1;
+        return new Date(a.expire_at).getTime() - new Date(b.expire_at).getTime();
+      default: // newest
+        return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+    }
+  });
+
+  const transformedForms = sortedForms.map(form => ({
     id: form.id,
     title: form.title,
     description: form.description || '',
@@ -111,6 +161,25 @@ const Feed = () => {
     );
   }
 
+  if (error) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <Card className="border-red-200 shadow-lg max-w-md">
+          <CardContent className="text-center py-12">
+            <p className="text-red-600 text-lg mb-4">Error loading forms</p>
+            <p className="text-slate-500 mb-4">{error}</p>
+            <Button 
+              onClick={fetchForms}
+              className="bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700"
+            >
+              Try Again
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -120,6 +189,13 @@ const Feed = () => {
           </h1>
           <p className="text-slate-600">Discover and fill interesting forms from the community</p>
         </div>
+        <Button 
+          onClick={fetchForms}
+          variant="outline"
+          className="border-emerald-200"
+        >
+          Refresh
+        </Button>
       </div>
 
       {/* Search and Filter Bar */}
@@ -174,7 +250,7 @@ const Feed = () => {
         <Card className="border-slate-200 shadow-lg">
           <CardContent className="text-center py-12">
             <p className="text-slate-500 text-lg">No forms found matching your criteria.</p>
-            <p className="text-slate-400 mb-6">Try adjusting your search or filters.</p>
+            <p className="text-slate-400 mb-6">Try adjusting your search or filters, or post the first form!</p>
             {session && (
               <Button 
                 onClick={() => window.location.href = '/post-form'}
