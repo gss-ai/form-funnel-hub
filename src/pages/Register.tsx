@@ -13,7 +13,8 @@ const Register = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
-  const { register, isLoading } = useAuth();
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const { register } = useAuth();
   const navigate = useNavigate();
 
   // Fill dummy data for testing
@@ -37,17 +38,27 @@ const Register = () => {
       return;
     }
 
+    setIsSubmitting(true);
     console.log('Registration attempt with:', { name, email });
     
-    const result = await register(name, email, password);
-    
-    if (result.error) {
-      toast.error(result.error);
-    } else {
-      toast.success('Account created successfully! Please check your email to verify your account.');
-      navigate('/login');
+    try {
+      const result = await register(name, email, password);
+      
+      if (result.error) {
+        toast.error(result.error);
+      } else {
+        toast.success('Account created successfully! You can now log in.');
+        navigate('/login');
+      }
+    } catch (error) {
+      console.error('Registration error:', error);
+      toast.error('Registration failed. Please try again.');
+    } finally {
+      setIsSubmitting(false);
     }
   };
+
+  const isFormValid = name.trim() && email.trim() && password.length >= 6 && password === confirmPassword;
 
   return (
     <div className="max-w-md mx-auto mt-8">
@@ -122,9 +133,9 @@ const Register = () => {
             <Button
               type="submit"
               className="w-full bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700"
-              disabled={isLoading}
+              disabled={!isFormValid || isSubmitting}
             >
-              {isLoading ? 'Creating Account...' : 'Create Account'}
+              {isSubmitting ? 'Creating Account...' : 'Create Account'}
             </Button>
           </form>
           <div className="mt-4 text-center">

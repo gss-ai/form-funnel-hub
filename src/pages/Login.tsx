@@ -11,7 +11,8 @@ import { useAuth } from '@/contexts/AuthContext';
 const Login = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const { login, isLoading } = useAuth();
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const { login } = useAuth();
   const navigate = useNavigate();
 
   // Fill dummy data for testing
@@ -23,17 +24,27 @@ const Login = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
+    setIsSubmitting(true);
     console.log('Login attempt with:', email);
     
-    const result = await login(email, password);
-    
-    if (result.error) {
-      toast.error(result.error);
-    } else {
-      toast.success('Logged in successfully!');
-      navigate('/dashboard');
+    try {
+      const result = await login(email, password);
+      
+      if (result.error) {
+        toast.error(result.error);
+      } else {
+        toast.success('Logged in successfully!');
+        navigate('/dashboard');
+      }
+    } catch (error) {
+      console.error('Login error:', error);
+      toast.error('Login failed. Please try again.');
+    } finally {
+      setIsSubmitting(false);
     }
   };
+
+  const isFormValid = email.trim() && password.length >= 6;
 
   return (
     <div className="max-w-md mx-auto mt-8">
@@ -84,9 +95,9 @@ const Login = () => {
             <Button
               type="submit"
               className="w-full bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700"
-              disabled={isLoading}
+              disabled={!isFormValid || isSubmitting}
             >
-              {isLoading ? 'Signing In...' : 'Sign In'}
+              {isSubmitting ? 'Signing In...' : 'Sign In'}
             </Button>
           </form>
           <div className="mt-4 text-center">

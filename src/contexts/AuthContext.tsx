@@ -41,32 +41,35 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       console.log('Fetching profile for user:', userId);
       
-      // Get profile
-      const { data: profile, error: profileError } = await supabase
+      // Get or create profile
+      let { data: profile, error: profileError } = await supabase
         .from('profiles')
         .select('*')
         .eq('id', userId)
         .single();
 
-      if (profileError) {
-        console.error('Profile error:', profileError);
-        // If profile doesn't exist, create it
-        if (profileError.code === 'PGRST116') {
-          const { data: newProfile, error: createError } = await supabase
-            .from('profiles')
-            .insert({ id: userId, name: email.split('@')[0] })
-            .select()
-            .single();
-          
-          if (createError) {
-            console.error('Error creating profile:', createError);
-            return;
-          }
-          
-          console.log('Created new profile:', newProfile);
-        } else {
+      if (profileError && profileError.code === 'PGRST116') {
+        // Profile doesn't exist, create it
+        console.log('Creating new profile for user:', userId);
+        const { data: newProfile, error: createError } = await supabase
+          .from('profiles')
+          .insert({ 
+            id: userId, 
+            name: email.split('@')[0] 
+          })
+          .select()
+          .single();
+        
+        if (createError) {
+          console.error('Error creating profile:', createError);
           return;
         }
+        
+        profile = newProfile;
+        console.log('Created new profile:', profile);
+      } else if (profileError) {
+        console.error('Profile error:', profileError);
+        return;
       }
 
       // Get forms posted count
@@ -87,7 +90,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         .select('badge_name')
         .eq('user_id', userId);
 
-      const userProfile = {
+      const userProfile: UserProfile = {
         id: userId,
         name: profile?.name || email.split('@')[0],
         email,
@@ -109,11 +112,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     
     // Set up auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
+      (event, session) => {
         console.log('Auth state changed:', event, session?.user?.id);
         setSession(session);
+        
         if (session?.user) {
-          await fetchUserProfile(session.user.id, session.user.email!);
+          // Use setTimeout to avoid potential deadlock
+          setTimeout(() => {
+            fetchUserProfile(session.user.id, session.user.email!);
+          }, 0);
         } else {
           setUser(null);
         }
@@ -135,7 +142,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, []);
 
   const login = async (email: string, password: string) => {
-    setIsLoading(true);
     try {
       console.log('Attempting login for:', email);
       const { error } = await supabase.auth.signInWithPassword({
@@ -152,20 +158,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     } catch (error) {
       console.error('Login exception:', error);
       return { error: 'Login failed' };
-    } finally {
-      setIsLoading(false);
     }
   };
 
   const register = async (name: string, email: string, password: string) => {
-    setIsLoading(true);
     try {
       console.log('Attempting registration for:', email, 'with name:', name);
       const { error } = await supabase.auth.signUp({
         email,
         password,
         options: {
-          data: { name }
+          data: { name },
+          emailRedirectTo: `${window.location.origin}/`
         }
       });
       
@@ -178,8 +182,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     } catch (error) {
       console.error('Registration exception:', error);
       return { error: 'Registration failed' };
-    } finally {
-      setIsLoading(false);
     }
   };
 
