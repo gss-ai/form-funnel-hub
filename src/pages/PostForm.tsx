@@ -12,6 +12,8 @@ import { CalendarIcon, X, Plus } from 'lucide-react';
 import { format } from 'date-fns';
 import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/contexts/AuthContext';
 
 const PostForm = () => {
   const [title, setTitle] = useState('');
@@ -22,6 +24,25 @@ const PostForm = () => {
   const [expiryDate, setExpiryDate] = useState<Date>();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const navigate = useNavigate();
+  const { session } = useAuth();
+
+  if (!session) {
+    return (
+      <div className="max-w-2xl mx-auto">
+        <Card className="border-slate-200 shadow-lg">
+          <CardContent className="text-center py-12">
+            <h2 className="text-2xl font-bold mb-4">Please log in to post forms</h2>
+            <Button 
+              onClick={() => navigate('/login')}
+              className="bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700"
+            >
+              Go to Login
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   const addTag = () => {
     if (newTag.trim() && !tags.includes(newTag.trim().toLowerCase())) {
@@ -42,13 +63,30 @@ const PostForm = () => {
       return;
     }
 
+    if (!formUrl.includes('forms.google.com') && !formUrl.includes('docs.google.com/forms')) {
+      toast.error('Please enter a valid Google Forms URL');
+      return;
+    }
+
     setIsSubmitting(true);
     try {
-      // Mock API call - replace with actual API
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      const { error } = await supabase
+        .from('forms')
+        .insert({
+          user_id: session.user.id,
+          title,
+          description,
+          google_form_url: formUrl,
+          tags,
+          expire_at: expiryDate.toISOString()
+        });
+
+      if (error) throw error;
+
       toast.success('Form posted successfully!');
       navigate('/feed');
     } catch (error) {
+      console.error('Error posting form:', error);
       toast.error('Failed to post form');
     } finally {
       setIsSubmitting(false);
@@ -57,9 +95,9 @@ const PostForm = () => {
 
   return (
     <div className="max-w-2xl mx-auto">
-      <Card>
+      <Card className="border-slate-200 shadow-lg">
         <CardHeader>
-          <CardTitle>Post a New Form</CardTitle>
+          <CardTitle className="text-slate-800">Post a New Form</CardTitle>
           <CardDescription>
             Share your Google Form with the SurvEase community
           </CardDescription>
@@ -73,6 +111,7 @@ const PostForm = () => {
                 placeholder="Enter a descriptive title for your form"
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
+                className="border-slate-200"
                 required
               />
             </div>
@@ -85,6 +124,7 @@ const PostForm = () => {
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
                 rows={4}
+                className="border-slate-200"
                 required
               />
             </div>
@@ -97,9 +137,10 @@ const PostForm = () => {
                 placeholder="https://forms.google.com/..."
                 value={formUrl}
                 onChange={(e) => setFormUrl(e.target.value)}
+                className="border-slate-200"
                 required
               />
-              <p className="text-sm text-gray-500">
+              <p className="text-sm text-slate-500">
                 Make sure your Google Form is set to public and accepts responses
               </p>
             </div>
@@ -112,15 +153,15 @@ const PostForm = () => {
                   value={newTag}
                   onChange={(e) => setNewTag(e.target.value)}
                   onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addTag())}
-                  className="flex-1"
+                  className="flex-1 border-slate-200"
                 />
-                <Button type="button" onClick={addTag} variant="outline" size="sm">
+                <Button type="button" onClick={addTag} variant="outline" size="sm" className="border-slate-200">
                   <Plus className="w-4 h-4" />
                 </Button>
               </div>
               <div className="flex flex-wrap gap-2">
                 {tags.map(tag => (
-                  <Badge key={tag} variant="secondary" className="flex items-center gap-1">
+                  <Badge key={tag} variant="secondary" className="flex items-center gap-1 bg-emerald-100 text-emerald-800">
                     {tag}
                     <button
                       type="button"
@@ -140,7 +181,7 @@ const PostForm = () => {
                 <PopoverTrigger asChild>
                   <Button
                     variant="outline"
-                    className="w-full justify-start text-left font-normal"
+                    className="w-full justify-start text-left font-normal border-slate-200"
                   >
                     <CalendarIcon className="mr-2 h-4 w-4" />
                     {expiryDate ? format(expiryDate, "PPP") : "Pick an expiry date"}
@@ -156,7 +197,7 @@ const PostForm = () => {
                   />
                 </PopoverContent>
               </Popover>
-              <p className="text-sm text-gray-500">
+              <p className="text-sm text-slate-500">
                 When should this form stop accepting responses?
               </p>
             </div>
@@ -166,14 +207,14 @@ const PostForm = () => {
                 type="button"
                 variant="outline"
                 onClick={() => navigate('/feed')}
-                className="flex-1"
+                className="flex-1 border-slate-200"
               >
                 Cancel
               </Button>
               <Button
                 type="submit"
                 disabled={isSubmitting}
-                className="flex-1 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
+                className="flex-1 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700"
               >
                 {isSubmitting ? 'Posting...' : 'Post Form'}
               </Button>

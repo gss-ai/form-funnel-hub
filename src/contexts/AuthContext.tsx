@@ -1,10 +1,12 @@
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import { User, Session } from '@supabase/supabase-js';
+import { supabase } from '@/integrations/supabase/client';
 
-interface User {
+interface UserProfile {
   id: string;
-  email: string;
   name: string;
+  email: string;
   formsPosted: number;
   formsFilled: number;
   totalRatings: number;
@@ -12,11 +14,11 @@ interface User {
 }
 
 interface AuthContextType {
-  user: User | null;
-  token: string | null;
-  login: (email: string, password: string) => Promise<void>;
-  register: (name: string, email: string, password: string) => Promise<void>;
-  logout: () => void;
+  user: UserProfile | null;
+  session: Session | null;
+  login: (email: string, password: string) => Promise<{ error?: string }>;
+  register: (name: string, email: string, password: string) => Promise<{ error?: string }>;
+  logout: () => Promise<void>;
   isLoading: boolean;
 }
 
@@ -31,42 +33,91 @@ export const useAuth = () => {
 };
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [user, setUser] = useState<User | null>(null);
-  const [token, setToken] = useState<string | null>(null);
+  const [user, setUser] = useState<UserProfile | null>(null);
+  const [session, setSession] = useState<Session | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  useEffect(() => {
-    const savedToken = localStorage.getItem('authToken');
-    const savedUser = localStorage.getItem('user');
-    
-    if (savedToken && savedUser) {
-      setToken(savedToken);
-      setUser(JSON.parse(savedUser));
+  const fetchUserProfile = async (userId: string, email: string) => {
+    try {
+      // Get profile
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', userId)
+        .single();
+
+      // Get forms posted count
+      const { count: formsPosted } = await supabase
+        .from('forms')
+        .select('*', { count: 'exact', head: true })
+        .eq('user_id', userId);
+
+      // Get forms filled count
+      const { count: formsFilled } = await supabase
+        .from('form_fills')
+        .select('*', { count: 'exact', head: true })
+        .eq('user_id', userId);
+
+      // Get badges
+      const { data: badges } = await supabase
+        .from('user_badges')
+        .select('badge_name')
+        .eq('user_id', userId);
+
+      setUser({
+        id: userId,
+        name: profile?.name || email,
+        email,
+        formsPosted: formsPosted || 0,
+        formsFilled: formsFilled || 0,
+        totalRatings: formsFilled || 0,
+        badges: badges?.map(b => b.badge_name) || []
+      });
+    } catch (error) {
+      console.error('Error fetching user profile:', error);
     }
-    setIsLoading(false);
+  };
+
+  useEffect(() => {
+    // Set up auth state listener
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      async (event, session) => {
+        setSession(session);
+        if (session?.user) {
+          await fetchUserProfile(session.user.id, session.user.email!);
+        } else {
+          setUser(null);
+        }
+        setIsLoading(false);
+      }
+    );
+
+    // Check for existing session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session);
+      if (session?.user) {
+        fetchUserProfile(session.user.id, session.user.email!);
+      }
+      setIsLoading(false);
+    });
+
+    return () => subscription.unsubscribe();
   }, []);
 
   const login = async (email: string, password: string) => {
     setIsLoading(true);
     try {
-      // Mock API call - replace with actual API
-      const mockUser: User = {
-        id: '1',
+      const { error } = await supabase.auth.signInWithPassword({
         email,
-        name: email.split('@')[0],
-        formsPosted: 5,
-        formsFilled: 23,
-        totalRatings: 45,
-        badges: ['Early Adopter', 'Form Enthusiast']
-      };
-      const mockToken = 'mock-jwt-token';
+        password
+      });
       
-      setUser(mockUser);
-      setToken(mockToken);
-      localStorage.setItem('authToken', mockToken);
-      localStorage.setItem('user', JSON.stringify(mockUser));
+      if (error) {
+        return { error: error.message };
+      }
+      return {};
     } catch (error) {
-      throw new Error('Login failed');
+      return { error: 'Login failed' };
     } finally {
       setIsLoading(false);
     }
@@ -75,38 +126,32 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const register = async (name: string, email: string, password: string) => {
     setIsLoading(true);
     try {
-      // Mock API call - replace with actual API
-      const mockUser: User = {
-        id: '1',
+      const { error } = await supabase.auth.signUp({
         email,
-        name,
-        formsPosted: 0,
-        formsFilled: 0,
-        totalRatings: 0,
-        badges: ['Newcomer']
-      };
-      const mockToken = 'mock-jwt-token';
+        password,
+        options: {
+          data: { name },
+          emailRedirectTo: `${window.location.origin}/`
+        }
+      });
       
-      setUser(mockUser);
-      setToken(mockToken);
-      localStorage.setItem('authToken', mockToken);
-      localStorage.setItem('user', JSON.stringify(mockUser));
+      if (error) {
+        return { error: error.message };
+      }
+      return {};
     } catch (error) {
-      throw new Error('Registration failed');
+      return { error: 'Registration failed' };
     } finally {
       setIsLoading(false);
     }
   };
 
-  const logout = () => {
-    setUser(null);
-    setToken(null);
-    localStorage.removeItem('authToken');
-    localStorage.removeItem('user');
+  const logout = async () => {
+    await supabase.auth.signOut();
   };
 
   return (
-    <AuthContext.Provider value={{ user, token, login, register, logout, isLoading }}>
+    <AuthContext.Provider value={{ user, session, login, register, logout, isLoading }}>
       {children}
     </AuthContext.Provider>
   );
