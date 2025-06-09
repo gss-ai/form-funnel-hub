@@ -18,9 +18,10 @@ interface Form {
   tags: string[];
   created_at: string;
   expire_at: string | null;
+  user_id: string;
   profiles: {
     name: string;
-  };
+  } | null;
   form_fills: {
     rating: number;
   }[];
@@ -36,17 +37,34 @@ const Feed = () => {
 
   const fetchForms = async () => {
     try {
-      const { data, error } = await supabase
+      // First get forms with form_fills
+      const { data: formsData, error: formsError } = await supabase
         .from('forms')
         .select(`
           *,
-          profiles (name),
           form_fills (rating)
         `)
         .order('created_at', { ascending: false });
 
-      if (error) throw error;
-      setForms(data || []);
+      if (formsError) throw formsError;
+
+      // Then get profiles for each form's user_id
+      const formsWithProfiles = await Promise.all(
+        (formsData || []).map(async (form) => {
+          const { data: profile } = await supabase
+            .from('profiles')
+            .select('name')
+            .eq('id', form.user_id)
+            .single();
+
+          return {
+            ...form,
+            profiles: profile
+          };
+        })
+      );
+
+      setForms(formsWithProfiles);
     } catch (error) {
       console.error('Error fetching forms:', error);
     } finally {
