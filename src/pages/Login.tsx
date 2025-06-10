@@ -19,7 +19,7 @@ const Login = () => {
   useEffect(() => {
     if (!loading && user) {
       console.log('User already logged in, redirecting to dashboard');
-      navigate('/dashboard');
+      navigate('/dashboard', { replace: true });
     }
   }, [user, loading, navigate]);
 
@@ -43,10 +43,10 @@ const Login = () => {
         toast.error(result.error);
         setIsSubmitting(false);
       } else {
-        console.log('Login successful, waiting for user data...');
+        console.log('Login successful!');
         toast.success('Logged in successfully!');
-        // Don't set isSubmitting to false here - let the useEffect handle redirect
-        // The AuthContext will handle updating the user state
+        // Force immediate redirect
+        navigate('/dashboard', { replace: true });
       }
     } catch (error) {
       console.error('Login error:', error);

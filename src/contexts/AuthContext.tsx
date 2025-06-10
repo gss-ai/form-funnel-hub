@@ -123,15 +123,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const login = async (email: string, password: string) => {
     try {
-      const { error } = await supabase.auth.signInWithPassword({
+      console.log('Starting login process...');
+      const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
 
       if (error) {
+        console.error('Login error from Supabase:', error);
         return { error: error.message };
       }
 
+      console.log('Login successful, session:', data.session);
       return {};
     } catch (error) {
       console.error('Login error:', error);
@@ -140,6 +143,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const logout = () => {
+    console.log('Logging out...');
     supabase.auth.signOut();
   };
 
@@ -170,6 +174,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   useEffect(() => {
+    console.log('Setting up auth state management...');
+    
     // Get initial session
     supabase.auth.getSession().then(({ data: { session: initialSession } }) => {
       console.log('Initial session:', initialSession);
