@@ -3,166 +3,159 @@ import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Star, Calendar, User, ExternalLink, QrCode, CheckCircle } from 'lucide-react';
-import { toast } from 'sonner';
+import { Star, Calendar, User, ExternalLink, Info } from 'lucide-react';
 import QRCodeDisplay from './QRCodeDisplay';
 import RatingDialog from './RatingDialog';
-
-interface Form {
-  id: string;
-  title: string;
-  description: string;
-  creator: string;
-  tags: string[];
-  createdAt: string;
-  expiresAt: string;
-  ratings: number;
-  totalRatings: number;
-  formUrl: string;
-  qrCode: string;
-}
+import FormDetailsModal from './FormDetailsModal';
 
 interface FormCardProps {
-  form: Form;
+  form: {
+    id: string;
+    title: string;
+    description: string;
+    creator: string;
+    tags: string[];
+    createdAt: string;
+    expiresAt: string | null;
+    ratings: number;
+    totalRatings: number;
+    formUrl: string;
+    qrCode: string;
+  };
 }
 
 const FormCard: React.FC<FormCardProps> = ({ form }) => {
-  const [isFilled, setIsFilled] = useState(false);
+  const [showQR, setShowQR] = useState(false);
   const [showRating, setShowRating] = useState(false);
+  const [showDetails, setShowDetails] = useState(false);
+
+  const isExpired = form.expiresAt ? new Date(form.expiresAt) < new Date() : false;
 
   const handleFillForm = () => {
+    setShowDetails(false);
     window.open(form.formUrl, '_blank');
-  };
-
-  const handleMarkAsFilled = () => {
-    setIsFilled(true);
     setShowRating(true);
-    toast.success('Form marked as completed!');
   };
 
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
-      month: 'short',
-      day: 'numeric',
-      year: 'numeric'
-    });
+  const handleShowDetails = () => {
+    setShowDetails(true);
   };
-
-  const getDaysUntilExpiry = () => {
-    const today = new Date();
-    const expiry = new Date(form.expiresAt);
-    const diffTime = expiry.getTime() - today.getTime();
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-    return diffDays;
-  };
-
-  const daysLeft = getDaysUntilExpiry();
 
   return (
     <>
-      <Card className="hover:shadow-lg transition-shadow duration-300">
-        <CardHeader>
-          <div className="flex items-start justify-between">
-            <div className="flex-1">
-              <CardTitle className="text-lg line-clamp-2">{form.title}</CardTitle>
-              <CardDescription className="mt-2 line-clamp-3">{form.description}</CardDescription>
-            </div>
-            <Dialog>
-              <DialogTrigger asChild>
-                <Button variant="ghost" size="sm">
-                  <QrCode className="w-4 h-4" />
-                </Button>
-              </DialogTrigger>
-              <DialogContent>
-                <DialogHeader>
-                  <DialogTitle>QR Code</DialogTitle>
-                  <DialogDescription>Scan to access the form</DialogDescription>
-                </DialogHeader>
-                <QRCodeDisplay formUrl={form.formUrl} />
-              </DialogContent>
-            </Dialog>
+      <Card className="h-full border-slate-200 shadow-lg hover:shadow-xl transition-shadow duration-300">
+        <CardHeader className="pb-3">
+          <div className="flex justify-between items-start mb-2">
+            <CardTitle className="text-lg leading-tight">{form.title}</CardTitle>
+            {isExpired && (
+              <Badge variant="destructive" className="text-xs">
+                Expired
+              </Badge>
+            )}
           </div>
+          <CardDescription className="text-sm line-clamp-2">
+            {form.description}
+          </CardDescription>
         </CardHeader>
-        <CardContent>
-          <div className="space-y-4">
-            {/* Tags */}
-            <div className="flex flex-wrap gap-2">
-              {form.tags.map(tag => (
-                <Badge key={tag} variant="secondary" className="text-xs">
+        
+        <CardContent className="space-y-4">
+          <div className="flex items-center justify-between text-sm text-slate-600">
+            <div className="flex items-center gap-1">
+              <User className="w-4 h-4" />
+              <span>{form.creator}</span>
+            </div>
+            <div className="flex items-center gap-1">
+              <Calendar className="w-4 h-4" />
+              <span>{new Date(form.createdAt).toLocaleDateString()}</span>
+            </div>
+          </div>
+
+          {form.tags.length > 0 && (
+            <div className="flex flex-wrap gap-1">
+              {form.tags.slice(0, 3).map((tag) => (
+                <Badge key={tag} variant="secondary" className="text-xs bg-emerald-100 text-emerald-800">
                   {tag}
                 </Badge>
               ))}
-            </div>
-
-            {/* Metadata */}
-            <div className="space-y-2 text-sm text-gray-600">
-              <div className="flex items-center gap-2">
-                <User className="w-4 h-4" />
-                <span>By {form.creator}</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <Calendar className="w-4 h-4" />
-                <span>Posted {formatDate(form.createdAt)}</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
-                <span>{form.ratings} ({form.totalRatings} ratings)</span>
-              </div>
-            </div>
-
-            {/* Expiry Warning */}
-            {daysLeft <= 7 && daysLeft > 0 && (
-              <div className="p-2 bg-orange-50 border border-orange-200 rounded-md">
-                <p className="text-sm text-orange-700">
-                  ⚠️ Expires in {daysLeft} day{daysLeft !== 1 ? 's' : ''}
-                </p>
-              </div>
-            )}
-
-            {/* Actions */}
-            <div className="flex gap-2">
-              {!isFilled ? (
-                <>
-                  <Button 
-                    onClick={handleFillForm}
-                    className="flex-1 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
-                  >
-                    <ExternalLink className="w-4 h-4 mr-2" />
-                    Fill Form
-                  </Button>
-                  <Button 
-                    variant="outline" 
-                    onClick={handleMarkAsFilled}
-                    className="flex-1"
-                  >
-                    <CheckCircle className="w-4 h-4 mr-2" />
-                    Mark as Filled
-                  </Button>
-                </>
-              ) : (
-                <Button 
-                  variant="outline" 
-                  className="w-full" 
-                  disabled
-                >
-                  <CheckCircle className="w-4 h-4 mr-2 text-green-600" />
-                  Completed
-                </Button>
+              {form.tags.length > 3 && (
+                <Badge variant="secondary" className="text-xs">
+                  +{form.tags.length - 3}
+                </Badge>
               )}
             </div>
+          )}
+
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-1">
+              <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
+              <span className="text-sm font-medium">
+                {form.ratings > 0 ? form.ratings.toFixed(1) : 'No ratings'}
+              </span>
+              {form.totalRatings > 0 && (
+                <span className="text-xs text-slate-500">
+                  ({form.totalRatings})
+                </span>
+              )}
+            </div>
+            {form.expiresAt && !isExpired && (
+              <span className="text-xs text-slate-500">
+                Expires {new Date(form.expiresAt).toLocaleDateString()}
+              </span>
+            )}
           </div>
+
+          <div className="flex gap-2 pt-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleShowDetails}
+              className="flex-1"
+            >
+              <Info className="w-4 h-4 mr-2" />
+              Details
+            </Button>
+            <Button
+              onClick={handleFillForm}
+              disabled={isExpired}
+              size="sm"
+              className="flex-1 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 disabled:opacity-50"
+            >
+              <ExternalLink className="w-4 h-4 mr-2" />
+              Fill Form
+            </Button>
+          </div>
+
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setShowQR(true)}
+            className="w-full text-slate-600 hover:text-slate-800"
+          >
+            Show QR Code
+          </Button>
         </CardContent>
       </Card>
 
-      {showRating && (
-        <RatingDialog 
-          isOpen={showRating}
-          onClose={() => setShowRating(false)}
-          formTitle={form.title}
-          formId={form.id}
-        />
-      )}
+      <QRCodeDisplay
+        isOpen={showQR}
+        onClose={() => setShowQR(false)}
+        formUrl={form.formUrl}
+        formTitle={form.title}
+      />
+
+      <RatingDialog
+        isOpen={showRating}
+        onClose={() => setShowRating(false)}
+        formId={form.id}
+        formTitle={form.title}
+      />
+
+      <FormDetailsModal
+        isOpen={showDetails}
+        onClose={() => setShowDetails(false)}
+        onFillForm={handleFillForm}
+        form={form}
+      />
     </>
   );
 };

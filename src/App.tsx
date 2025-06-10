@@ -9,6 +9,7 @@ import Layout from "./components/Layout";
 import Index from "./pages/Index";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
+import EmailConfirmed from "./pages/EmailConfirmed";
 import Dashboard from "./pages/Dashboard";
 import Feed from "./pages/Feed";
 import PostForm from "./pages/PostForm";
@@ -30,6 +31,7 @@ const App = () => (
               <Route index element={<Index />} />
               <Route path="/login" element={<Login />} />
               <Route path="/register" element={<Register />} />
+              <Route path="/email-confirmed" element={<EmailConfirmed />} />
               <Route path="/dashboard" element={<Dashboard />} />
               <Route path="/feed" element={<Feed />} />
               <Route path="/post-form" element={<PostForm />} />

@@ -47,8 +47,11 @@ const Register = () => {
       if (result.error) {
         toast.error(result.error);
       } else {
-        toast.success('Account created successfully! You can now log in.');
-        navigate('/login');
+        toast.success('Account created successfully! Please check your email to confirm your account.');
+        // Redirect to email confirmed page after a short delay
+        setTimeout(() => {
+          navigate('/email-confirmed');
+        }, 2000);
       }
     } catch (error) {
       console.error('Registration error:', error);
