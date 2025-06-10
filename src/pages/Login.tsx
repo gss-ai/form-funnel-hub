@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -12,8 +12,16 @@ const Login = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const { login } = useAuth();
+  const { login, user, loading } = useAuth();
   const navigate = useNavigate();
+
+  // Redirect if already logged in
+  useEffect(() => {
+    if (!loading && user) {
+      console.log('User already logged in, redirecting to dashboard');
+      navigate('/dashboard');
+    }
+  }, [user, loading, navigate]);
 
   // Fill dummy data for testing
   const fillDummyData = () => {
@@ -31,20 +39,36 @@ const Login = () => {
       const result = await login(email, password);
       
       if (result.error) {
+        console.error('Login failed:', result.error);
         toast.error(result.error);
+        setIsSubmitting(false);
       } else {
+        console.log('Login successful, waiting for user data...');
         toast.success('Logged in successfully!');
-        navigate('/dashboard');
+        // Don't set isSubmitting to false here - let the useEffect handle redirect
+        // The AuthContext will handle updating the user state
       }
     } catch (error) {
       console.error('Login error:', error);
       toast.error('Login failed. Please try again.');
-    } finally {
       setIsSubmitting(false);
     }
   };
 
   const isFormValid = email.trim() && password.length >= 6;
+
+  // Show loading state if we're checking auth status
+  if (loading) {
+    return (
+      <div className="max-w-md mx-auto mt-8">
+        <Card className="border-slate-200 shadow-lg">
+          <CardContent className="pt-6">
+            <div className="text-center">Loading...</div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div className="max-w-md mx-auto mt-8">

@@ -176,10 +176,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setSession(initialSession);
       
       if (initialSession?.user) {
-        fetchUserProfile(initialSession.user.id).then(setUser);
+        fetchUserProfile(initialSession.user.id).then((userProfile) => {
+          console.log('Initial user profile loaded:', userProfile);
+          setUser(userProfile);
+          setLoading(false);
+        });
+      } else {
+        setLoading(false);
       }
-      
-      setLoading(false);
     });
 
     // Listen for auth changes
@@ -189,13 +193,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setSession(currentSession);
         
         if (currentSession?.user) {
+          setLoading(true);
           const userProfile = await fetchUserProfile(currentSession.user.id);
+          console.log('User profile loaded after auth change:', userProfile);
           setUser(userProfile);
+          setLoading(false);
         } else {
           setUser(null);
+          setLoading(false);
         }
-        
-        setLoading(false);
       }
     );
 
