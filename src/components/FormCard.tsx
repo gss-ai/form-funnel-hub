@@ -3,10 +3,12 @@ import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Star, Calendar, User, ExternalLink, Info } from 'lucide-react';
-import QRCodeDisplay from './QRCodeDisplay';
+import { Star, Calendar, User, ExternalLink, Info, Copy } from 'lucide-react';
 import RatingDialog from './RatingDialog';
 import FormDetailsModal from './FormDetailsModal';
+import { toast } from 'sonner';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface FormCardProps {
   form: {
@@ -25,20 +27,58 @@ interface FormCardProps {
 }
 
 const FormCard: React.FC<FormCardProps> = ({ form }) => {
-  const [showQR, setShowQR] = useState(false);
   const [showRating, setShowRating] = useState(false);
   const [showDetails, setShowDetails] = useState(false);
+  const { session } = useAuth();
 
   const isExpired = form.expiresAt ? new Date(form.expiresAt) < new Date() : false;
 
-  const handleFillForm = () => {
+  const handleFillForm = async () => {
+    if (!session?.user) {
+      toast.error('Please log in to fill forms');
+      return;
+    }
+
     setShowDetails(false);
+    
+    // Record the form fill in the database
+    try {
+      const { error } = await supabase
+        .from('form_fills')
+        .insert({
+          form_id: form.id,
+          user_id: session.user.id,
+          rating: null,
+          comment: null
+        });
+
+      if (error) {
+        console.error('Error recording form fill:', error);
+        toast.error('Failed to record form activity');
+      } else {
+        console.log('Form fill recorded successfully');
+        toast.success('Form activity recorded!');
+      }
+    } catch (error) {
+      console.error('Error recording form fill:', error);
+    }
+
+    // Open the form in a new tab
     window.open(form.formUrl, '_blank');
-    setShowRating(true);
+    
+    // Show rating dialog after a delay
+    setTimeout(() => {
+      setShowRating(true);
+    }, 1000);
   };
 
   const handleShowDetails = () => {
     setShowDetails(true);
+  };
+
+  const handleCopyUrl = () => {
+    navigator.clipboard.writeText(form.formUrl);
+    toast.success('Form URL copied to clipboard!');
   };
 
   return (
@@ -128,20 +168,14 @@ const FormCard: React.FC<FormCardProps> = ({ form }) => {
           <Button
             variant="ghost"
             size="sm"
-            onClick={() => setShowQR(true)}
+            onClick={handleCopyUrl}
             className="w-full text-slate-600 hover:text-slate-800"
           >
-            Show QR Code
+            <Copy className="w-4 h-4 mr-2" />
+            Copy Form URL
           </Button>
         </CardContent>
       </Card>
-
-      <QRCodeDisplay
-        isOpen={showQR}
-        onClose={() => setShowQR(false)}
-        formUrl={form.formUrl}
-        formTitle={form.title}
-      />
 
       <RatingDialog
         isOpen={showRating}
