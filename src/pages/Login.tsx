@@ -17,7 +17,7 @@ const Login = () => {
 
   // Redirect if already logged in
   useEffect(() => {
-    if (!loading && user) {
+    if (user && !loading) {
       console.log('User already logged in, redirecting to dashboard');
       navigate('/dashboard', { replace: true });
     }
@@ -32,6 +32,8 @@ const Login = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
+    if (isSubmitting) return;
+    
     setIsSubmitting(true);
     console.log('Login attempt with:', email);
     
@@ -45,8 +47,7 @@ const Login = () => {
       } else {
         console.log('Login successful!');
         toast.success('Logged in successfully!');
-        // Force immediate redirect
-        navigate('/dashboard', { replace: true });
+        // Navigation will be handled by useEffect when user state updates
       }
     } catch (error) {
       console.error('Login error:', error);
@@ -57,8 +58,8 @@ const Login = () => {
 
   const isFormValid = email.trim() && password.length >= 6;
 
-  // Show loading state if we're checking auth status
-  if (loading) {
+  // Don't show loading if user is already logged in
+  if (loading && !user) {
     return (
       <div className="max-w-md mx-auto mt-8">
         <Card className="border-slate-200 shadow-lg">
@@ -68,6 +69,11 @@ const Login = () => {
         </Card>
       </div>
     );
+  }
+
+  // If user exists, they'll be redirected by useEffect
+  if (user) {
+    return null;
   }
 
   return (
