@@ -36,7 +36,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [session, setSession] = useState<Session | null>(null);
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
-  const [initialized, setInitialized] = useState(false);
 
   const fetchUserStats = async (userId: string) => {
     try {
@@ -174,11 +173,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   useEffect(() => {
-    // Prevent multiple initializations
-    if (initialized) return;
-    
     console.log('Setting up auth state management...');
-    setInitialized(true);
     
     // Get initial session
     supabase.auth.getSession().then(({ data: { session: initialSession } }) => {
@@ -202,7 +197,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         console.log('Auth state changed:', event, currentSession);
         setSession(currentSession);
         
-        if (currentSession?.user && event === 'SIGNED_IN') {
+        if (currentSession?.user && (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED')) {
           setLoading(true);
           const userProfile = await fetchUserProfile(currentSession.user.id);
           console.log('User profile loaded after auth change:', userProfile);
@@ -216,7 +211,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     );
 
     return () => subscription.unsubscribe();
-  }, [initialized]);
+  }, []);
 
   const value = {
     session,

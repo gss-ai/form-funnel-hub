@@ -7,6 +7,7 @@ import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
+import { CheckCircle, Mail } from 'lucide-react';
 
 const Register = () => {
   const [name, setName] = useState('');
@@ -14,6 +15,7 @@ const Register = () => {
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [registrationSuccess, setRegistrationSuccess] = useState(false);
   const { register } = useAuth();
   const navigate = useNavigate();
 
@@ -47,11 +49,8 @@ const Register = () => {
       if (result.error) {
         toast.error(result.error);
       } else {
-        toast.success('Account created successfully! Please check your email to confirm your account.');
-        // Redirect to email confirmed page after a short delay
-        setTimeout(() => {
-          navigate('/email-confirmed');
-        }, 2000);
+        setRegistrationSuccess(true);
+        toast.success('Registration successful! Please check your email to confirm your account.');
       }
     } catch (error) {
       console.error('Registration error:', error);
@@ -62,6 +61,51 @@ const Register = () => {
   };
 
   const isFormValid = name.trim() && email.trim() && password.length >= 6 && password === confirmPassword;
+
+  // Show success message after registration
+  if (registrationSuccess) {
+    return (
+      <div className="max-w-md mx-auto mt-8">
+        <Card className="border-emerald-200 shadow-lg">
+          <CardHeader className="text-center">
+            <div className="mx-auto mb-4">
+              <Mail className="w-16 h-16 text-emerald-500" />
+            </div>
+            <CardTitle className="text-2xl font-bold text-emerald-600">
+              Check Your Email
+            </CardTitle>
+            <CardDescription className="text-lg">
+              We've sent a confirmation link to your email address
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="text-center space-y-4">
+            <div className="p-4 bg-emerald-50 rounded-lg">
+              <p className="text-emerald-700 font-medium">
+                📧 Confirmation email sent to {email}
+              </p>
+              <p className="text-emerald-600 text-sm mt-2">
+                Please click the link in your email to activate your account.
+              </p>
+            </div>
+            
+            <div className="space-y-3">
+              <Button
+                onClick={() => navigate('/login')}
+                variant="outline"
+                className="w-full"
+              >
+                Back to Login
+              </Button>
+              
+              <p className="text-sm text-gray-500">
+                Didn't receive the email? Check your spam folder or try registering again.
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div className="max-w-md mx-auto mt-8">
