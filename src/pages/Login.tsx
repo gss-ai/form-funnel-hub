@@ -15,13 +15,13 @@ const Login = () => {
   const { login, user, loading } = useAuth();
   const navigate = useNavigate();
 
-  // Redirect if already logged in
+  // Redirect if already logged in - simplified logic
   useEffect(() => {
-    if (user && !loading) {
+    if (user) {
       console.log('User already logged in, redirecting to dashboard');
       navigate('/dashboard', { replace: true });
     }
-  }, [user, loading, navigate]);
+  }, [user, navigate]);
 
   // Fill dummy data for testing
   const fillDummyData = () => {
@@ -43,22 +43,22 @@ const Login = () => {
       if (result.error) {
         console.error('Login failed:', result.error);
         toast.error(result.error);
-        setIsSubmitting(false);
       } else {
         console.log('Login successful!');
         toast.success('Logged in successfully!');
-        // Navigation will be handled by useEffect when user state updates
+        // The useEffect will handle navigation when user state updates
       }
     } catch (error) {
       console.error('Login error:', error);
       toast.error('Login failed. Please try again.');
+    } finally {
       setIsSubmitting(false);
     }
   };
 
   const isFormValid = email.trim() && password.length >= 6;
 
-  // Don't show loading if user is already logged in
+  // Show loading only when auth is loading AND user doesn't exist
   if (loading && !user) {
     return (
       <div className="max-w-md mx-auto mt-8">
@@ -71,7 +71,7 @@ const Login = () => {
     );
   }
 
-  // If user exists, they'll be redirected by useEffect
+  // If user exists, don't render anything (redirect will happen)
   if (user) {
     return null;
   }

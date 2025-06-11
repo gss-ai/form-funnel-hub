@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { Session, User as SupabaseUser } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
@@ -37,6 +36,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [session, setSession] = useState<Session | null>(null);
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const [initialized, setInitialized] = useState(false);
 
   const fetchUserStats = async (userId: string) => {
     try {
@@ -174,7 +174,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   useEffect(() => {
+    // Prevent multiple initializations
+    if (initialized) return;
+    
     console.log('Setting up auth state management...');
+    setInitialized(true);
     
     // Get initial session
     supabase.auth.getSession().then(({ data: { session: initialSession } }) => {
@@ -198,13 +202,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         console.log('Auth state changed:', event, currentSession);
         setSession(currentSession);
         
-        if (currentSession?.user) {
+        if (currentSession?.user && event === 'SIGNED_IN') {
           setLoading(true);
           const userProfile = await fetchUserProfile(currentSession.user.id);
           console.log('User profile loaded after auth change:', userProfile);
           setUser(userProfile);
           setLoading(false);
-        } else {
+        } else if (event === 'SIGNED_OUT') {
           setUser(null);
           setLoading(false);
         }
@@ -212,7 +216,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     );
 
     return () => subscription.unsubscribe();
-  }, []);
+  }, [initialized]);
 
   const value = {
     session,
@@ -230,3 +234,5 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     </AuthContext.Provider>
   );
 };
+
+export default AuthProvider;
