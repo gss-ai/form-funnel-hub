@@ -135,21 +135,6 @@ const Feed = () => {
     }
   });
 
-  const transformedForms = sortedForms.map(form => ({
-    id: form.id,
-    title: form.title,
-    description: form.description || '',
-    creator: form.profiles?.name || 'Unknown',
-    tags: form.tags || [],
-    createdAt: form.created_at,
-    expiresAt: form.expire_at,
-    ratings: form.form_fills.length > 0 ? 
-      form.form_fills.reduce((sum, fill) => sum + fill.rating, 0) / form.form_fills.length : 0,
-    totalRatings: form.form_fills.length,
-    formUrl: form.google_form_url,
-    qrCode: `qr-${form.id}`
-  }));
-
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
@@ -241,12 +226,29 @@ const Feed = () => {
 
       {/* Forms Grid */}
       <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {transformedForms.map(form => (
-          <FormCard key={form.id} form={form} />
-        ))}
+        {sortedForms.map(form => {
+          const averageRating = form.form_fills.length > 0 ? 
+            form.form_fills.reduce((sum, fill) => sum + fill.rating, 0) / form.form_fills.length : 0;
+          
+          return (
+            <FormCard 
+              key={form.id}
+              id={form.id}
+              title={form.title}
+              description={form.description || ''}
+              tags={form.tags || []}
+              createdAt={form.created_at}
+              expireAt={form.expire_at}
+              googleFormUrl={form.google_form_url}
+              fillCount={form.form_fills.length}
+              averageRating={averageRating}
+              onFormFilled={fetchForms}
+            />
+          );
+        })}
       </div>
 
-      {transformedForms.length === 0 && !loading && (
+      {sortedForms.length === 0 && !loading && (
         <Card className="border-slate-200 shadow-lg">
           <CardContent className="text-center py-12">
             <p className="text-slate-500 text-lg">No forms found matching your criteria.</p>

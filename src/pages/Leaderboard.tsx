@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -33,116 +32,126 @@ const Leaderboard = () => {
     try {
       setLoading(true);
 
-      // Get top form fillers
+      // Get top form fillers - separate queries to avoid join issues
       const { data: fillersData, error: fillersError } = await supabase
         .from('form_fills')
-        .select(`
-          user_id,
-          profiles!inner(name)
-        `);
+        .select('user_id');
 
       if (fillersError) throw fillersError;
 
       // Process fillers data
-      const fillerStats = fillersData?.reduce((acc: any, fill) => {
+      const fillerStats: Record<string, { formsFilled: number; points: number; badges: number }> = {};
+      
+      fillersData?.forEach(fill => {
         const userId = fill.user_id;
-        const name = fill.profiles?.name || 'Anonymous';
-        
-        if (!acc[userId]) {
-          acc[userId] = { name, formsFilled: 0, points: 0, badges: 0 };
+        if (!fillerStats[userId]) {
+          fillerStats[userId] = { formsFilled: 0, points: 0, badges: 0 };
         }
-        acc[userId].formsFilled += 1;
-        acc[userId].points += 5; // 5 points per form filled
-        return acc;
-      }, {}) || {};
+        fillerStats[userId].formsFilled += 1;
+        fillerStats[userId].points += 5;
+      });
 
-      // Get badges for top fillers
-      const { data: badgesData } = await supabase
-        .from('user_badges')
-        .select('user_id');
+      // Get profiles for fillers
+      const fillerUserIds = Object.keys(fillerStats);
+      const fillersWithNames: TopFiller[] = [];
 
-      const badgeCounts = badgesData?.reduce((acc: any, badge) => {
-        acc[badge.user_id] = (acc[badge.user_id] || 0) + 1;
-        return acc;
-      }, {}) || {};
+      for (const userId of fillerUserIds) {
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('name')
+          .eq('id', userId)
+          .maybeSingle();
 
-      // Convert to array and sort
-      const fillersArray = Object.entries(fillerStats)
-        .map(([userId, stats]: [string, any], index) => ({
-          rank: index + 1,
-          name: stats.name,
-          formsFilled: stats.formsFilled,
-          points: stats.points,
-          badges: badgeCounts[userId] || 0
-        }))
+        if (profile) {
+          fillersWithNames.push({
+            rank: 0, // Will be set after sorting
+            name: profile.name,
+            formsFilled: fillerStats[userId].formsFilled,
+            points: fillerStats[userId].points,
+            badges: 0 // TODO: Implement badges counting
+          });
+        }
+      }
+
+      // Sort and rank fillers
+      const sortedFillers = fillersWithNames
         .sort((a, b) => b.formsFilled - a.formsFilled)
         .slice(0, 8)
         .map((item, index) => ({ ...item, rank: index + 1 }));
 
-      setTopFillers(fillersArray);
+      setTopFillers(sortedFillers);
 
       // Get top form posters
       const { data: postersData, error: postersError } = await supabase
         .from('forms')
-        .select(`
-          user_id,
-          profiles!inner(name)
-        `);
+        .select('user_id');
 
       if (postersError) throw postersError;
 
       // Process posters data
-      const posterStats = postersData?.reduce((acc: any, form) => {
+      const posterStats: Record<string, { formsPosted: number; totalResponses: number; avgRating: number }> = {};
+      
+      postersData?.forEach(form => {
         const userId = form.user_id;
-        const name = form.profiles?.name || 'Anonymous';
-        
-        if (!acc[userId]) {
-          acc[userId] = { name, formsPosted: 0, totalResponses: 0, avgRating: 0 };
+        if (!posterStats[userId]) {
+          posterStats[userId] = { formsPosted: 0, totalResponses: 0, avgRating: 0 };
         }
-        acc[userId].formsPosted += 1;
-        return acc;
-      }, {}) || {};
+        posterStats[userId].formsPosted += 1;
+      });
 
-      // Get response counts and ratings for each poster
-      for (const userId of Object.keys(posterStats)) {
-        const { data: userForms } = await supabase
-          .from('forms')
-          .select('id')
-          .eq('user_id', userId);
+      // Get profiles and responses for posters
+      const posterUserIds = Object.keys(posterStats);
+      const postersWithNames: TopPoster[] = [];
 
-        if (userForms && userForms.length > 0) {
-          const formIds = userForms.map(f => f.id);
-          
-          const { data: responses } = await supabase
-            .from('form_fills')
-            .select('rating')
-            .in('form_id', formIds);
+      for (const userId of posterUserIds) {
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('name')
+          .eq('id', userId)
+          .maybeSingle();
 
-          const totalResponses = responses?.length || 0;
-          const ratingsWithValues = responses?.filter(r => r.rating !== null) || [];
-          const avgRating = ratingsWithValues.length > 0 
-            ? ratingsWithValues.reduce((sum, r) => sum + (r.rating || 0), 0) / ratingsWithValues.length 
-            : 0;
+        if (profile) {
+          // Get user's forms
+          const { data: userForms } = await supabase
+            .from('forms')
+            .select('id')
+            .eq('user_id', userId);
 
-          posterStats[userId].totalResponses = totalResponses;
-          posterStats[userId].avgRating = Number(avgRating.toFixed(1));
+          let totalResponses = 0;
+          let avgRating = 0;
+
+          if (userForms && userForms.length > 0) {
+            const formIds = userForms.map(f => f.id);
+            
+            const { data: responses } = await supabase
+              .from('form_fills')
+              .select('rating')
+              .in('form_id', formIds);
+
+            totalResponses = responses?.length || 0;
+            const ratingsWithValues = responses?.filter(r => r.rating !== null) || [];
+            avgRating = ratingsWithValues.length > 0 
+              ? ratingsWithValues.reduce((sum, r) => sum + (r.rating || 0), 0) / ratingsWithValues.length 
+              : 0;
+          }
+
+          postersWithNames.push({
+            rank: 0, // Will be set after sorting
+            name: profile.name,
+            formsPosted: posterStats[userId].formsPosted,
+            totalResponses,
+            avgRating: Number(avgRating.toFixed(1))
+          });
         }
       }
 
-      // Convert to array and sort
-      const postersArray = Object.entries(posterStats)
-        .map(([userId, stats]: [string, any], index) => ({
-          rank: index + 1,
-          name: stats.name,
-          formsPosted: stats.formsPosted,
-          totalResponses: stats.totalResponses,
-          avgRating: stats.avgRating
-        }))
+      // Sort and rank posters
+      const sortedPosters = postersWithNames
         .sort((a, b) => b.formsPosted - a.formsPosted)
         .slice(0, 8)
         .map((item, index) => ({ ...item, rank: index + 1 }));
 
-      setTopPosters(postersArray);
+      setTopPosters(sortedPosters);
 
     } catch (error) {
       console.error('Error fetching leaderboard data:', error);
