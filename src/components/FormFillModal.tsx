@@ -40,6 +40,8 @@ const FormFillModal: React.FC<FormFillModalProps> = ({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
+    console.log('Form submission started', { user, rating, formId });
+    
     if (!user) {
       toast.error('Please log in to fill forms');
       return;
@@ -55,21 +57,22 @@ const FormFillModal: React.FC<FormFillModalProps> = ({
     try {
       console.log('Submitting form fill:', { formId, userId: user.id, rating, comment });
       
-      const { error } = await supabase
+      const { data, error } = await supabase
         .from('form_fills')
         .insert({
           form_id: formId,
           user_id: user.id,
           rating: rating,
           comment: comment.trim() || null
-        });
+        })
+        .select();
 
       if (error) {
         console.error('Error saving form fill:', error);
         throw error;
       }
 
-      console.log('Form fill saved successfully');
+      console.log('Form fill saved successfully:', data);
       toast.success('Thank you for your feedback!');
       onFormFilled();
       onClose();
@@ -77,9 +80,9 @@ const FormFillModal: React.FC<FormFillModalProps> = ({
       // Reset form
       setRating(0);
       setComment('');
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error submitting form fill:', error);
-      toast.error('Failed to submit feedback. Please try again.');
+      toast.error(`Failed to submit feedback: ${error.message}`);
     } finally {
       setIsSubmitting(false);
     }
@@ -89,8 +92,14 @@ const FormFillModal: React.FC<FormFillModalProps> = ({
     window.open(formUrl, '_blank');
   };
 
+  const handleClose = () => {
+    setRating(0);
+    setComment('');
+    onClose();
+  };
+
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
+    <Dialog open={isOpen} onOpenChange={handleClose}>
       <DialogContent className="max-w-md">
         <DialogHeader>
           <DialogTitle>Fill Form & Rate</DialogTitle>
@@ -160,7 +169,7 @@ const FormFillModal: React.FC<FormFillModalProps> = ({
               <Button
                 type="button"
                 variant="outline"
-                onClick={onClose}
+                onClick={handleClose}
                 className="flex-1"
                 disabled={isSubmitting}
               >

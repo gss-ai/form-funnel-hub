@@ -18,7 +18,7 @@ const Login = () => {
   // Redirect if already logged in
   useEffect(() => {
     if (user && !loading) {
-      console.log('User logged in, redirecting to dashboard');
+      console.log('User already logged in, redirecting to dashboard');
       navigate('/dashboard', { replace: true });
     }
   }, [user, loading, navigate]);
@@ -44,9 +44,8 @@ const Login = () => {
         console.error('Login failed:', result.error);
         toast.error(result.error);
       } else {
-        console.log('Login successful!');
+        console.log('Login successful, will redirect via useEffect');
         toast.success('Logged in successfully!');
-        // Don't navigate here - let the useEffect handle it when user state updates
       }
     } catch (error) {
       console.error('Login error:', error);

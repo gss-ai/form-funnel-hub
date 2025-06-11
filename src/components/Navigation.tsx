@@ -4,15 +4,23 @@ import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
 import { Home, BarChart3, Users, PlusCircle, User, LogOut } from 'lucide-react';
+import { toast } from 'sonner';
 
 const Navigation = () => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
 
-  const handleLogout = () => {
-    logout();
-    navigate('/');
+  const handleLogout = async () => {
+    try {
+      console.log('Logging out user...');
+      await logout();
+      toast.success('Logged out successfully');
+      navigate('/', { replace: true });
+    } catch (error) {
+      console.error('Logout error:', error);
+      toast.error('Failed to logout');
+    }
   };
 
   const isActive = (path: string) => location.pathname === path;

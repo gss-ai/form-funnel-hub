@@ -18,8 +18,9 @@ interface AuthContextType {
   loading: boolean;
   refreshUser: () => Promise<void>;
   login: (email: string, password: string) => Promise<{ error?: string }>;
-  logout: () => void;
+  logout: () => Promise<void>;
   register: (name: string, email: string, password: string) => Promise<{ error?: string }>;
+  verifyOtp: (email: string, otp: string) => Promise<{ error?: string }>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -141,20 +142,31 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  const logout = () => {
-    console.log('Logging out...');
-    supabase.auth.signOut();
+  const logout = async () => {
+    try {
+      console.log('Logging out...');
+      const { error } = await supabase.auth.signOut();
+      if (error) {
+        console.error('Logout error:', error);
+        throw error;
+      }
+      
+      // Clear local state immediately
+      setSession(null);
+      setUser(null);
+      console.log('Logout successful');
+    } catch (error) {
+      console.error('Logout error:', error);
+      throw error;
+    }
   };
 
   const register = async (name: string, email: string, password: string) => {
     try {
-      const redirectUrl = `${window.location.origin}/email-confirmed`;
-      
       const { error } = await supabase.auth.signUp({
         email,
         password,
         options: {
-          emailRedirectTo: redirectUrl,
           data: {
             name: name
           }
@@ -168,6 +180,26 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       return {};
     } catch (error) {
       console.error('Registration error:', error);
+      return { error: 'An unexpected error occurred' };
+    }
+  };
+
+  const verifyOtp = async (email: string, otp: string) => {
+    try {
+      const { data, error } = await supabase.auth.verifyOtp({
+        email,
+        token: otp,
+        type: 'signup'
+      });
+
+      if (error) {
+        return { error: error.message };
+      }
+
+      console.log('OTP verification successful:', data);
+      return {};
+    } catch (error) {
+      console.error('OTP verification error:', error);
       return { error: 'An unexpected error occurred' };
     }
   };
@@ -220,7 +252,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     refreshUser,
     login,
     logout,
-    register
+    register,
+    verifyOtp
   };
 
   return (
