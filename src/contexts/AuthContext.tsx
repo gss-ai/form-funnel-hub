@@ -153,7 +153,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         return { error: error.message };
       }
 
-      console.log('Login successful, session:', data.session);
+      console.log('Login successful');
       return {};
     } catch (error) {
       console.error('Login error:', error);
@@ -169,10 +169,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         console.error('Logout error:', error);
         throw error;
       }
-      
-      // Clear local state immediately
-      setSession(null);
-      setUser(null);
       console.log('Logout successful');
     } catch (error) {
       console.error('Logout error:', error);
@@ -211,33 +207,33 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     supabase.auth.getSession().then(({ data: { session: initialSession } }) => {
       console.log('Initial session:', initialSession);
       setSession(initialSession);
+      setLoading(false);
       
       if (initialSession?.user) {
+        // Fetch user profile after setting loading to false
         fetchUserProfile(initialSession.user.id, initialSession.user.email || '').then((userProfile) => {
           console.log('Initial user profile loaded:', userProfile);
           setUser(userProfile);
-          setLoading(false);
         });
-      } else {
-        setLoading(false);
       }
     });
 
     // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, currentSession) => {
+      (event, currentSession) => {
         console.log('Auth state changed:', event, currentSession);
         setSession(currentSession);
         
         if (currentSession?.user && (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED')) {
-          setLoading(true);
-          const userProfile = await fetchUserProfile(currentSession.user.id, currentSession.user.email || '');
-          console.log('User profile loaded after auth change:', userProfile);
-          setUser(userProfile);
-          setLoading(false);
+          // Use setTimeout to prevent blocking
+          setTimeout(() => {
+            fetchUserProfile(currentSession.user.id, currentSession.user.email || '').then((userProfile) => {
+              console.log('User profile loaded after auth change:', userProfile);
+              setUser(userProfile);
+            });
+          }, 0);
         } else if (event === 'SIGNED_OUT') {
           setUser(null);
-          setLoading(false);
         }
       }
     );
