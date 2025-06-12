@@ -89,7 +89,12 @@ const FormFillModal: React.FC<FormFillModalProps> = ({
   };
 
   const openForm = () => {
-    window.open(formUrl, '_blank');
+    console.log('Opening form URL:', formUrl);
+    if (formUrl) {
+      window.open(formUrl, '_blank', 'noopener,noreferrer');
+    } else {
+      toast.error('Form URL is not available');
+    }
   };
 
   const handleClose = () => {

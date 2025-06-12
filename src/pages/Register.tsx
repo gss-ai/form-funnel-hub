@@ -1,13 +1,12 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
-import OtpVerification from '@/components/OtpVerification';
 
 const Register = () => {
   const [name, setName] = useState('');
@@ -15,17 +14,16 @@ const Register = () => {
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [showOtpVerification, setShowOtpVerification] = useState(false);
-  const [registrationEmail, setRegistrationEmail] = useState('');
-  const { register } = useAuth();
+  const { register, user, loading } = useAuth();
+  const navigate = useNavigate();
 
-  // Fill dummy data for testing
-  const fillDummyData = () => {
-    setName('Test User');
-    setEmail('testuser@example.com');
-    setPassword('testpassword123');
-    setConfirmPassword('testpassword123');
-  };
+  // Redirect if already logged in
+  useEffect(() => {
+    if (user && !loading) {
+      console.log('User already logged in, redirecting to dashboard');
+      navigate('/dashboard', { replace: true });
+    }
+  }, [user, loading, navigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -49,9 +47,11 @@ const Register = () => {
       if (result.error) {
         toast.error(result.error);
       } else {
-        setRegistrationEmail(email);
-        setShowOtpVerification(true);
-        toast.success('Registration successful! Please check your email for the OTP.');
+        toast.success('Registration successful! Please check your email to confirm your account.');
+        setName('');
+        setEmail('');
+        setPassword('');
+        setConfirmPassword('');
       }
     } catch (error) {
       console.error('Registration error:', error);
@@ -61,21 +61,24 @@ const Register = () => {
     }
   };
 
-  const handleBackToRegistration = () => {
-    setShowOtpVerification(false);
-    setRegistrationEmail('');
-  };
-
   const isFormValid = name.trim() && email.trim() && password.length >= 6 && password === confirmPassword;
 
-  // Show OTP verification if registration was successful
-  if (showOtpVerification) {
+  // Show loading only when auth is loading
+  if (loading) {
     return (
-      <OtpVerification 
-        email={registrationEmail} 
-        onBack={handleBackToRegistration}
-      />
+      <div className="max-w-md mx-auto mt-8">
+        <Card className="border-slate-200 shadow-lg">
+          <CardContent className="pt-6">
+            <div className="text-center">Loading...</div>
+          </CardContent>
+        </Card>
+      </div>
     );
+  }
+
+  // If user exists, don't render anything (redirect will happen)
+  if (user) {
+    return null;
   }
 
   return (
@@ -88,15 +91,6 @@ const Register = () => {
           <CardDescription>
             Create your account to start sharing and filling forms
           </CardDescription>
-          <Button 
-            type="button" 
-            onClick={fillDummyData}
-            variant="outline"
-            size="sm"
-            className="self-center"
-          >
-            Fill Test Data
-          </Button>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">

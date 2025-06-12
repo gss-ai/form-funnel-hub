@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { Session, User as SupabaseUser } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
@@ -20,7 +21,6 @@ interface AuthContextType {
   login: (email: string, password: string) => Promise<{ error?: string }>;
   logout: () => Promise<void>;
   register: (name: string, email: string, password: string) => Promise<{ error?: string }>;
-  verifyOtp: (email: string, otp: string) => Promise<{ error?: string }>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -169,7 +169,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         options: {
           data: {
             name: name
-          }
+          },
+          emailRedirectTo: `${window.location.origin}/dashboard`
         }
       });
 
@@ -180,26 +181,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       return {};
     } catch (error) {
       console.error('Registration error:', error);
-      return { error: 'An unexpected error occurred' };
-    }
-  };
-
-  const verifyOtp = async (email: string, otp: string) => {
-    try {
-      const { data, error } = await supabase.auth.verifyOtp({
-        email,
-        token: otp,
-        type: 'signup'
-      });
-
-      if (error) {
-        return { error: error.message };
-      }
-
-      console.log('OTP verification successful:', data);
-      return {};
-    } catch (error) {
-      console.error('OTP verification error:', error);
       return { error: 'An unexpected error occurred' };
     }
   };
@@ -252,8 +233,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     refreshUser,
     login,
     logout,
-    register,
-    verifyOtp
+    register
   };
 
   return (

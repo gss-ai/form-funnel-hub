@@ -23,12 +23,6 @@ const Login = () => {
     }
   }, [user, loading, navigate]);
 
-  // Fill dummy data for testing
-  const fillDummyData = () => {
-    setEmail('testuser@example.com');
-    setPassword('testpassword123');
-  };
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -85,15 +79,6 @@ const Login = () => {
           <CardDescription>
             Sign in to your SurvEase account
           </CardDescription>
-          <Button 
-            type="button" 
-            onClick={fillDummyData}
-            variant="outline"
-            size="sm"
-            className="self-center"
-          >
-            Fill Test Data
-          </Button>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
