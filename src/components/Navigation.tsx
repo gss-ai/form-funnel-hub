@@ -49,10 +49,10 @@ const Navigation = () => {
   const isActive = (path: string) => location.pathname === path;
 
   return (
-    <nav className="bg-white/80 backdrop-blur-md border-b border-gray-200 sticky top-0 z-50 dark:bg-gray-900/80 dark:border-gray-700">
+    <nav className="bg-background/80 backdrop-blur-md border-b border-border sticky top-0 z-50">
       <div className="container mx-auto px-4">
         <div className="flex items-center justify-between h-16">
-          <Link to="/" className="flex items-center space-x-2">
+          <Link to="/" className="flex items-center space-x-2 flex-shrink-0">
             <div className="w-8 h-8 bg-gradient-to-br from-blue-600 to-purple-600 rounded-lg flex items-center justify-center">
               <span className="text-white font-bold text-sm">SE</span>
             </div>
@@ -61,20 +61,20 @@ const Navigation = () => {
             </span>
           </Link>
 
-          <div className="flex items-center space-x-6">
+          <div className="flex items-center space-x-4 flex-shrink-0">
             {/* Dark Mode Toggle */}
             <div className="flex items-center space-x-2">
-              <Sun className="w-4 h-4 text-gray-600 dark:text-gray-400" />
+              <Sun className="w-4 h-4 text-muted-foreground" />
               <Switch
                 checked={isDarkMode}
                 onCheckedChange={toggleDarkMode}
                 className="data-[state=checked]:bg-blue-600"
               />
-              <Moon className="w-4 h-4 text-gray-600 dark:text-gray-400" />
+              <Moon className="w-4 h-4 text-muted-foreground" />
             </div>
 
             {user ? (
-              <>
+              <div className="flex items-center space-x-2">
                 <Link to="/dashboard">
                   <Button 
                     variant={isActive('/dashboard') ? 'default' : 'ghost'} 
@@ -82,7 +82,7 @@ const Navigation = () => {
                     className="flex items-center space-x-2"
                   >
                     <Home className="w-4 h-4" />
-                    <span>Dashboard</span>
+                    <span className="hidden sm:inline">Dashboard</span>
                   </Button>
                 </Link>
                 <Link to="/feed">
@@ -92,7 +92,7 @@ const Navigation = () => {
                     className="flex items-center space-x-2"
                   >
                     <BarChart3 className="w-4 h-4" />
-                    <span>Feed</span>
+                    <span className="hidden sm:inline">Feed</span>
                   </Button>
                 </Link>
                 <Link to="/leaderboard">
@@ -102,7 +102,7 @@ const Navigation = () => {
                     className="flex items-center space-x-2"
                   >
                     <Users className="w-4 h-4" />
-                    <span>Leaderboard</span>
+                    <span className="hidden sm:inline">Leaderboard</span>
                   </Button>
                 </Link>
                 <Link to="/post-form">
@@ -112,7 +112,7 @@ const Navigation = () => {
                     className="flex items-center space-x-2"
                   >
                     <PlusCircle className="w-4 h-4" />
-                    <span>Post Form</span>
+                    <span className="hidden sm:inline">Post Form</span>
                   </Button>
                 </Link>
                 <Link to="/profile">
@@ -122,28 +122,28 @@ const Navigation = () => {
                     className="flex items-center space-x-2"
                   >
                     <User className="w-4 h-4" />
-                    <span>Profile</span>
+                    <span className="hidden sm:inline">Profile</span>
                   </Button>
                 </Link>
                 <Button 
                   variant="ghost" 
                   size="sm" 
                   onClick={handleLogout}
-                  className="flex items-center space-x-2 text-red-600 hover:text-red-700"
+                  className="flex items-center space-x-2 text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-950"
                 >
                   <LogOut className="w-4 h-4" />
-                  <span>Logout</span>
+                  <span className="hidden sm:inline">Logout</span>
                 </Button>
-              </>
+              </div>
             ) : (
-              <>
+              <div className="flex items-center space-x-2">
                 <Link to="/login">
                   <Button variant="ghost" size="sm">Login</Button>
                 </Link>
                 <Link to="/register">
                   <Button size="sm">Sign Up</Button>
                 </Link>
-              </>
+              </div>
             )}
           </div>
         </div>

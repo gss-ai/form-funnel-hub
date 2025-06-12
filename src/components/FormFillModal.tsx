@@ -90,10 +90,37 @@ const FormFillModal: React.FC<FormFillModalProps> = ({
 
   const openForm = () => {
     console.log('Opening form URL:', formUrl);
-    if (formUrl) {
-      window.open(formUrl, '_blank', 'noopener,noreferrer');
-    } else {
+    
+    if (!formUrl) {
       toast.error('Form URL is not available');
+      return;
+    }
+    
+    // Ensure the URL has a protocol
+    let urlToOpen = formUrl;
+    if (!formUrl.startsWith('http://') && !formUrl.startsWith('https://')) {
+      urlToOpen = 'https://' + formUrl;
+    }
+    
+    try {
+      // Open in new tab
+      const newWindow = window.open(urlToOpen, '_blank', 'noopener,noreferrer');
+      
+      if (!newWindow) {
+        // If popup was blocked, try alternative method
+        const link = document.createElement('a');
+        link.href = urlToOpen;
+        link.target = '_blank';
+        link.rel = 'noopener noreferrer';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+      }
+      
+      toast.success('Form opened in new tab');
+    } catch (error) {
+      console.error('Error opening form:', error);
+      toast.error('Failed to open form. Please check the URL.');
     }
   };
 
@@ -105,7 +132,7 @@ const FormFillModal: React.FC<FormFillModalProps> = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
-      <DialogContent className="max-w-md">
+      <DialogContent className="max-w-md bg-background">
         <DialogHeader>
           <DialogTitle>Fill Form & Rate</DialogTitle>
           <DialogDescription>
@@ -114,8 +141,8 @@ const FormFillModal: React.FC<FormFillModalProps> = ({
         </DialogHeader>
         
         <div className="space-y-4">
-          <div className="p-4 bg-blue-50 rounded-lg border border-blue-200">
-            <h3 className="font-semibold mb-2">{formTitle}</h3>
+          <div className="p-4 bg-blue-50 dark:bg-blue-950/30 rounded-lg border border-blue-200 dark:border-blue-800">
+            <h3 className="font-semibold mb-2 text-foreground">{formTitle}</h3>
             <Button
               onClick={openForm}
               className="w-full"
@@ -124,7 +151,7 @@ const FormFillModal: React.FC<FormFillModalProps> = ({
               <ExternalLink className="w-4 h-4 mr-2" />
               Open Form to Fill
             </Button>
-            <p className="text-sm text-gray-600 mt-2">
+            <p className="text-sm text-muted-foreground mt-2">
               Click above to open and fill the form, then return here to rate it
             </p>
           </div>
@@ -140,20 +167,20 @@ const FormFillModal: React.FC<FormFillModalProps> = ({
                     onClick={() => handleRatingClick(value)}
                     onMouseEnter={() => setHoveredRating(value)}
                     onMouseLeave={() => setHoveredRating(0)}
-                    className="p-1 rounded hover:bg-gray-100 transition-colors"
+                    className="p-1 rounded hover:bg-accent transition-colors"
                   >
                     <Star
                       className={`w-6 h-6 ${
                         value <= (hoveredRating || rating)
                           ? 'fill-yellow-400 text-yellow-400'
-                          : 'text-gray-300'
+                          : 'text-muted-foreground'
                       }`}
                     />
                   </button>
                 ))}
               </div>
               {rating > 0 && (
-                <p className="text-sm text-gray-600">
+                <p className="text-sm text-muted-foreground">
                   You rated this form {rating} star{rating !== 1 ? 's' : ''}
                 </p>
               )}
@@ -167,6 +194,7 @@ const FormFillModal: React.FC<FormFillModalProps> = ({
                 onChange={(e) => setComment(e.target.value)}
                 placeholder="Share your thoughts about this form..."
                 rows={3}
+                className="bg-background"
               />
             </div>
 
