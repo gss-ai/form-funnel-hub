@@ -82,17 +82,36 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  const fetchUserProfile = async (userId: string): Promise<User | null> => {
+  const fetchUserProfile = async (userId: string, userEmail: string): Promise<User | null> => {
     try {
       console.log('Fetching profile for user:', userId);
       
-      const { data: profile, error } = await supabase
+      let { data: profile, error } = await supabase
         .from('profiles')
         .select('*')
         .eq('id', userId)
         .single();
 
-      if (error) {
+      // If profile doesn't exist, create it
+      if (error && error.code === 'PGRST116') {
+        console.log('Profile not found, creating new profile...');
+        const { data: newProfile, error: createError } = await supabase
+          .from('profiles')
+          .insert([
+            {
+              id: userId,
+              name: userEmail.split('@')[0] // Use email prefix as default name
+            }
+          ])
+          .select()
+          .single();
+
+        if (createError) {
+          console.error('Error creating profile:', createError);
+          return null;
+        }
+        profile = newProfile;
+      } else if (error) {
         console.error('Error fetching user profile:', error);
         return null;
       }
@@ -104,7 +123,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       
       return {
         id: profile.id,
-        email: session?.user?.email || '',
+        email: userEmail,
         name: profile.name,
         ...stats
       };
@@ -116,7 +135,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const refreshUser = async () => {
     if (session?.user) {
-      const userProfile = await fetchUserProfile(session.user.id);
+      const userProfile = await fetchUserProfile(session.user.id, session.user.email || '');
       setUser(userProfile);
     }
   };
@@ -170,7 +189,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           data: {
             name: name
           },
-          emailRedirectTo: `${window.location.origin}/dashboard`
+          emailRedirectTo: `${window.location.origin}/email-confirmed`
         }
       });
 
@@ -194,7 +213,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setSession(initialSession);
       
       if (initialSession?.user) {
-        fetchUserProfile(initialSession.user.id).then((userProfile) => {
+        fetchUserProfile(initialSession.user.id, initialSession.user.email || '').then((userProfile) => {
           console.log('Initial user profile loaded:', userProfile);
           setUser(userProfile);
           setLoading(false);
@@ -212,7 +231,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         
         if (currentSession?.user && (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED')) {
           setLoading(true);
-          const userProfile = await fetchUserProfile(currentSession.user.id);
+          const userProfile = await fetchUserProfile(currentSession.user.id, currentSession.user.email || '');
           console.log('User profile loaded after auth change:', userProfile);
           setUser(userProfile);
           setLoading(false);
