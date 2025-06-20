@@ -16,7 +16,7 @@
     --popover: 0 0% 100%;
     --popover-foreground: 0 0% 0%;
 
-    --primary: 0 100% 50%;
+    --primary: 154 100% 10%;
     --primary-foreground: 0 0% 100%;
 
     --secondary: 210 40% 96.1%;
@@ -25,65 +25,65 @@
     --muted: 210 40% 96.1%;
     --muted-foreground: 0 0% 40%;
 
-    --accent: 51 100% 50%;
-    --accent-foreground: 0 0% 0%;
+    --accent: 154 80% 15%;
+    --accent-foreground: 0 0% 100%;
 
     --destructive: 0 100% 50%;
     --destructive-foreground: 0 0% 100%;
 
     --border: 0 0% 85%;
     --input: 0 0% 95%;
-    --ring: 0 100% 50%;
+    --ring: 154 100% 10%;
 
     --radius: 0.5rem;
 
     --sidebar-background: 0 0% 98%;
     --sidebar-foreground: 0 0% 0%;
-    --sidebar-primary: 0 100% 50%;
+    --sidebar-primary: 154 100% 10%;
     --sidebar-primary-foreground: 0 0% 100%;
     --sidebar-accent: 240 4.8% 95.9%;
     --sidebar-accent-foreground: 0 0% 0%;
     --sidebar-border: 220 13% 91%;
-    --sidebar-ring: 0 100% 50%;
+    --sidebar-ring: 154 100% 10%;
   }
 
   .dark {
     --background: 0 0% 0%;
-    --foreground: 51 100% 50%;
+    --foreground: 0 0% 88%;
 
-    --card: 0 0% 5%;
-    --card-foreground: 51 100% 50%;
+    --card: 0 0% 3%;
+    --card-foreground: 0 0% 88%;
 
-    --popover: 0 0% 5%;
-    --popover-foreground: 51 100% 50%;
+    --popover: 0 0% 3%;
+    --popover-foreground: 0 0% 88%;
 
-    --primary: 0 100% 50%;
-    --primary-foreground: 0 0% 0%;
+    --primary: 154 100% 10%;
+    --primary-foreground: 0 0% 100%;
 
-    --secondary: 0 0% 10%;
-    --secondary-foreground: 51 100% 50%;
+    --secondary: 0 0% 5%;
+    --secondary-foreground: 0 0% 88%;
 
-    --muted: 0 0% 10%;
-    --muted-foreground: 51 100% 70%;
+    --muted: 0 0% 5%;
+    --muted-foreground: 0 0% 60%;
 
-    --accent: 51 100% 50%;
-    --accent-foreground: 0 0% 0%;
+    --accent: 154 80% 15%;
+    --accent-foreground: 0 0% 100%;
 
     --destructive: 0 100% 50%;
-    --destructive-foreground: 0 0% 0%;
+    --destructive-foreground: 0 0% 100%;
 
-    --border: 0 0% 15%;
-    --input: 0 0% 10%;
-    --ring: 0 100% 50%;
+    --border: 0 0% 10%;
+    --input: 0 0% 8%;
+    --ring: 154 100% 10%;
 
     --sidebar-background: 0 0% 0%;
-    --sidebar-foreground: 51 100% 50%;
-    --sidebar-primary: 0 100% 50%;
-    --sidebar-primary-foreground: 0 0% 0%;
-    --sidebar-accent: 0 0% 10%;
-    --sidebar-accent-foreground: 51 100% 50%;
-    --sidebar-border: 0 0% 15%;
-    --sidebar-ring: 0 100% 50%;
+    --sidebar-foreground: 0 0% 88%;
+    --sidebar-primary: 154 100% 10%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 0 0% 5%;
+    --sidebar-accent-foreground: 0 0% 88%;
+    --sidebar-border: 0 0% 10%;
+    --sidebar-ring: 154 100% 10%;
   }
 }
 
@@ -103,15 +103,37 @@
 
   /* Ensure consistent text colors in dark mode */
   .dark h1, .dark h2, .dark h3, .dark h4, .dark h5, .dark h6 {
-    color: hsl(var(--accent));
+    color: hsl(var(--foreground)) !important;
   }
 
   .dark p, .dark span, .dark div {
-    color: hsl(var(--foreground));
+    color: hsl(var(--foreground)) !important;
   }
 
   .dark .text-muted-foreground {
     color: hsl(var(--muted-foreground)) !important;
+  }
+
+  /* Force dark backgrounds for all cards and containers in dark mode */
+  .dark .bg-card,
+  .dark .bg-card\/50,
+  .dark .bg-card\/80,
+  .dark .bg-white,
+  .dark .bg-slate-50,
+  .dark .bg-emerald-50,
+  .dark .bg-teal-50,
+  .dark [class*="bg-gradient-to-r from-emerald"],
+  .dark [class*="bg-gradient-to-br from-emerald"],
+  .dark [class*="bg-gradient-to-r from-teal"],
+  .dark [class*="bg-gradient-to-br from-teal"] {
+    background: hsl(var(--card)) !important;
+    color: hsl(var(--card-foreground)) !important;
+  }
+
+  /* Fix gradients in dark mode */
+  .dark .bg-gradient-to-r,
+  .dark .bg-gradient-to-br {
+    background: linear-gradient(135deg, hsl(var(--primary)), hsl(var(--accent))) !important;
   }
 
   /* Mobile-first responsive design */

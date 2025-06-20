@@ -49,7 +49,7 @@ const Navigation = () => {
   const isActive = (path: string) => location.pathname === path;
 
   return (
-    <nav className="bg-background/95 backdrop-blur-md border-b border-border/50 sticky top-0 z-50 shadow-sm">
+    <nav className="bg-background/95 backdrop-blur-md border-b border-border sticky top-0 z-50 shadow-sm">
       <div className="container mx-auto px-2 md:px-4">
         <div className="flex items-center justify-between h-14 md:h-16">
           <Link to="/" className="flex items-center space-x-2 md:space-x-3 flex-shrink-0">
@@ -141,7 +141,7 @@ const Navigation = () => {
                   <Button variant="ghost" size="sm" className="text-xs md:text-sm px-2 md:px-3">Login</Button>
                 </Link>
                 <Link to="/register">
-                  <Button size="sm" className="bg-gradient-to-r from-primary to-accent hover:from-primary/90 hover:to-accent/90 text-xs md:text-sm px-2 md:px-3">
+                  <Button size="sm" className="bg-gradient-to-r from-primary to-accent hover:opacity-90 text-xs md:text-sm px-2 md:px-3">
                     Sign Up
                   </Button>
                 </Link>

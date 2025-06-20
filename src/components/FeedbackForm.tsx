@@ -24,26 +24,52 @@ const FeedbackForm = () => {
     console.log('Submitting feedback:', { email, feedback });
 
     try {
-      // Using FormSubmit service to send email
-      const formData = new FormData();
-      formData.append('email', email);
-      formData.append('message', feedback);
-      formData.append('_to', 'gss391256@gmail.com');
-      formData.append('_subject', 'SurvEase Website Feedback');
-      formData.append('_captcha', 'false');
-
-      const response = await fetch('https://formsubmit.co/gss391256@gmail.com', {
-        method: 'POST',
-        body: formData
-      });
-
-      if (response.ok) {
-        toast.success('Feedback sent successfully! Thank you for helping us improve.');
-        setEmail('');
-        setFeedback('');
-      } else {
-        throw new Error('Failed to send feedback');
-      }
+      // Using FormSubmit service with proper configuration
+      const form = document.createElement('form');
+      form.method = 'POST';
+      form.action = 'https://formsubmit.co/gss391256@gmail.com';
+      
+      // Add form fields
+      const emailField = document.createElement('input');
+      emailField.type = 'hidden';
+      emailField.name = 'email';
+      emailField.value = email;
+      form.appendChild(emailField);
+      
+      const messageField = document.createElement('input');
+      messageField.type = 'hidden';
+      messageField.name = 'message';
+      messageField.value = `Feedback from ${email}: ${feedback}`;
+      form.appendChild(messageField);
+      
+      // Add FormSubmit configuration fields
+      const subjectField = document.createElement('input');
+      subjectField.type = 'hidden';
+      subjectField.name = '_subject';
+      subjectField.value = 'SurvEase Website Feedback';
+      form.appendChild(subjectField);
+      
+      const captchaField = document.createElement('input');
+      captchaField.type = 'hidden';
+      captchaField.name = '_captcha';
+      captchaField.value = 'false';
+      form.appendChild(captchaField);
+      
+      const nextField = document.createElement('input');
+      nextField.type = 'hidden';
+      nextField.name = '_next';
+      nextField.value = window.location.href;
+      form.appendChild(nextField);
+      
+      // Submit form
+      document.body.appendChild(form);
+      form.submit();
+      document.body.removeChild(form);
+      
+      toast.success('Feedback sent successfully! Thank you for helping us improve.');
+      setEmail('');
+      setFeedback('');
+      
     } catch (error) {
       console.error('Error sending feedback:', error);
       toast.error('Failed to send feedback. Please try again later.');
@@ -53,10 +79,10 @@ const FeedbackForm = () => {
   };
 
   return (
-    <Card className="w-full max-w-2xl mx-auto bg-card/80 backdrop-blur-sm border-border/50 hover:border-primary/20 transition-all duration-300">
+    <Card className="w-full max-w-2xl mx-auto bg-card border-border shadow-lg">
       <CardHeader className="text-center pb-4">
-        <CardTitle className="text-2xl font-bold text-foreground flex items-center justify-center gap-2">
-          <MessageSquare className="w-6 h-6 text-accent" />
+        <CardTitle className="text-2xl font-bold text-card-foreground flex items-center justify-center gap-2">
+          <MessageSquare className="w-6 h-6 text-primary" />
           Send Us Feedback
         </CardTitle>
         <p className="text-muted-foreground mt-2">
@@ -66,8 +92,8 @@ const FeedbackForm = () => {
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-6">
           <div className="space-y-2">
-            <label htmlFor="email" className="text-sm font-medium text-foreground flex items-center gap-2">
-              <Mail className="w-4 h-4 text-accent" />
+            <label htmlFor="email" className="text-sm font-medium text-card-foreground flex items-center gap-2">
+              <Mail className="w-4 h-4 text-primary" />
               Email Address
             </label>
             <Input
@@ -82,7 +108,7 @@ const FeedbackForm = () => {
           </div>
           
           <div className="space-y-2">
-            <label htmlFor="feedback" className="text-sm font-medium text-foreground">
+            <label htmlFor="feedback" className="text-sm font-medium text-card-foreground">
               Your Feedback
             </label>
             <Textarea
@@ -99,7 +125,7 @@ const FeedbackForm = () => {
           <Button
             type="submit"
             disabled={isSubmitting}
-            className="w-full bg-gradient-to-r from-primary to-accent hover:from-primary/90 hover:to-accent/90 text-primary-foreground font-semibold py-3 rounded-md transition-all duration-300 transform hover:scale-[1.02] disabled:scale-100 disabled:opacity-50"
+            className="w-full bg-gradient-to-r from-primary to-accent hover:opacity-90 text-primary-foreground font-semibold py-3 rounded-md transition-all duration-300 transform hover:scale-[1.02] disabled:scale-100 disabled:opacity-50"
           >
             {isSubmitting ? 'Sending...' : 'Send Feedback'}
           </Button>
