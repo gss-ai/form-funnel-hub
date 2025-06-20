@@ -50,38 +50,38 @@ const Navigation = () => {
 
   return (
     <nav className="bg-background/95 backdrop-blur-md border-b border-border/50 sticky top-0 z-50 shadow-sm">
-      <div className="container mx-auto px-4">
-        <div className="flex items-center justify-between h-16">
-          <Link to="/" className="flex items-center space-x-3 flex-shrink-0">
-            <div className="w-10 h-10 bg-gradient-to-br from-primary to-accent rounded-xl flex items-center justify-center shadow-lg">
-              <span className="text-2xl">📋</span>
+      <div className="container mx-auto px-2 md:px-4">
+        <div className="flex items-center justify-between h-14 md:h-16">
+          <Link to="/" className="flex items-center space-x-2 md:space-x-3 flex-shrink-0">
+            <div className="w-8 h-8 md:w-10 md:h-10 bg-gradient-to-br from-primary to-accent rounded-lg md:rounded-xl flex items-center justify-center shadow-lg">
+              <span className="text-lg md:text-2xl">📋</span>
             </div>
-            <span className="text-xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
+            <span className="text-lg md:text-xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent hidden sm:inline">
               SurvEase
             </span>
           </Link>
 
-          <div className="flex items-center space-x-4">
+          <div className="flex items-center space-x-1 md:space-x-4">
             {/* Dark Mode Toggle */}
-            <div className="flex items-center space-x-2">
-              <Sun className="w-4 h-4 text-muted-foreground" />
+            <div className="flex items-center space-x-1 md:space-x-2">
+              <Sun className="w-3 h-3 md:w-4 md:h-4 text-muted-foreground" />
               <Switch
                 checked={isDarkMode}
                 onCheckedChange={toggleDarkMode}
-                className="data-[state=checked]:bg-primary"
+                className="data-[state=checked]:bg-primary scale-75 md:scale-100"
               />
-              <Moon className="w-4 h-4 text-muted-foreground" />
+              <Moon className="w-3 h-3 md:w-4 md:h-4 text-muted-foreground" />
             </div>
 
             {user ? (
-              <div className="flex items-center space-x-2">
+              <div className="flex items-center space-x-1 md:space-x-2">
                 <Link to="/dashboard">
                   <Button 
                     variant={isActive('/dashboard') ? 'default' : 'ghost'} 
                     size="sm" 
-                    className="flex items-center space-x-2"
+                    className="flex items-center space-x-1 md:space-x-2 text-xs md:text-sm px-2 md:px-3"
                   >
-                    <Home className="w-4 h-4" />
+                    <Home className="w-3 h-3 md:w-4 md:h-4" />
                     <span className="hidden sm:inline">Dashboard</span>
                   </Button>
                 </Link>
@@ -89,9 +89,9 @@ const Navigation = () => {
                   <Button 
                     variant={isActive('/feed') ? 'default' : 'ghost'} 
                     size="sm" 
-                    className="flex items-center space-x-2"
+                    className="flex items-center space-x-1 md:space-x-2 text-xs md:text-sm px-2 md:px-3"
                   >
-                    <BarChart3 className="w-4 h-4" />
+                    <BarChart3 className="w-3 h-3 md:w-4 md:h-4" />
                     <span className="hidden sm:inline">Feed</span>
                   </Button>
                 </Link>
@@ -99,9 +99,9 @@ const Navigation = () => {
                   <Button 
                     variant={isActive('/leaderboard') ? 'default' : 'ghost'} 
                     size="sm" 
-                    className="flex items-center space-x-2"
+                    className="flex items-center space-x-1 md:space-x-2 text-xs md:text-sm px-2 md:px-3"
                   >
-                    <Users className="w-4 h-4" />
+                    <Users className="w-3 h-3 md:w-4 md:h-4" />
                     <span className="hidden sm:inline">Leaderboard</span>
                   </Button>
                 </Link>
@@ -109,19 +109,19 @@ const Navigation = () => {
                   <Button 
                     variant={isActive('/post-form') ? 'default' : 'ghost'} 
                     size="sm" 
-                    className="flex items-center space-x-2"
+                    className="flex items-center space-x-1 md:space-x-2 text-xs md:text-sm px-2 md:px-3"
                   >
-                    <PlusCircle className="w-4 h-4" />
-                    <span className="hidden sm:inline">Post Form</span>
+                    <PlusCircle className="w-3 h-3 md:w-4 md:h-4" />
+                    <span className="hidden sm:inline">Post</span>
                   </Button>
                 </Link>
                 <Link to="/profile">
                   <Button 
                     variant={isActive('/profile') ? 'default' : 'ghost'} 
                     size="sm" 
-                    className="flex items-center space-x-2"
+                    className="flex items-center space-x-1 md:space-x-2 text-xs md:text-sm px-2 md:px-3"
                   >
-                    <User className="w-4 h-4" />
+                    <User className="w-3 h-3 md:w-4 md:h-4" />
                     <span className="hidden sm:inline">Profile</span>
                   </Button>
                 </Link>
@@ -129,19 +129,19 @@ const Navigation = () => {
                   variant="ghost" 
                   size="sm" 
                   onClick={handleLogout}
-                  className="flex items-center space-x-2 text-destructive hover:text-destructive hover:bg-destructive/10"
+                  className="flex items-center space-x-1 md:space-x-2 text-destructive hover:text-destructive hover:bg-destructive/10 text-xs md:text-sm px-2 md:px-3"
                 >
-                  <LogOut className="w-4 h-4" />
+                  <LogOut className="w-3 h-3 md:w-4 md:h-4" />
                   <span className="hidden sm:inline">Logout</span>
                 </Button>
               </div>
             ) : (
-              <div className="flex items-center space-x-2">
+              <div className="flex items-center space-x-1 md:space-x-2">
                 <Link to="/login">
-                  <Button variant="ghost" size="sm">Login</Button>
+                  <Button variant="ghost" size="sm" className="text-xs md:text-sm px-2 md:px-3">Login</Button>
                 </Link>
                 <Link to="/register">
-                  <Button size="sm" className="bg-gradient-to-r from-primary to-accent hover:from-primary/90 hover:to-accent/90">
+                  <Button size="sm" className="bg-gradient-to-r from-primary to-accent hover:from-primary/90 hover:to-accent/90 text-xs md:text-sm px-2 md:px-3">
                     Sign Up
                   </Button>
                 </Link>

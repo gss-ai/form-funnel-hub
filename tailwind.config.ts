@@ -13,8 +13,12 @@ export default {
 	theme: {
 		container: {
 			center: true,
-			padding: '2rem',
+			padding: '1rem',
 			screens: {
+				'sm': '640px',
+				'md': '768px',
+				'lg': '1024px',
+				'xl': '1280px',
 				'2xl': '1400px'
 			}
 		},
@@ -63,33 +67,10 @@ export default {
 					border: 'hsl(var(--sidebar-border))',
 					ring: 'hsl(var(--sidebar-ring))'
 				},
-				// Custom red and gold colors
-				'deep-red': {
-					DEFAULT: '#B22222',
-					50: '#F5E6E6',
-					100: '#E8C2C2',
-					200: '#D89999',
-					300: '#C77070',
-					400: '#B94949',
-					500: '#B22222',
-					600: '#9E1F1F',
-					700: '#8A1B1B',
-					800: '#751717',
-					900: '#5C1212'
-				},
-				'soft-gold': {
-					DEFAULT: '#FFD700',
-					50: '#FFFDF0',
-					100: '#FFF8D1',
-					200: '#FFF1A3',
-					300: '#FFEA75',
-					400: '#FFE347',
-					500: '#FFD700',
-					600: '#E6C200',
-					700: '#CCAD00',
-					800: '#B39800',
-					900: '#998300'
-				}
+				// Strict color scheme - Black, Gold, Red only
+				'pure-black': '#000000',
+				'pure-gold': '#FFD700',
+				'pure-red': '#FF0000'
 			},
 			borderRadius: {
 				lg: 'var(--radius)',
@@ -117,6 +98,13 @@ export default {
 			animation: {
 				'accordion-down': 'accordion-down 0.2s ease-out',
 				'accordion-up': 'accordion-up 0.2s ease-out'
+			},
+			// Mobile-first responsive spacing
+			spacing: {
+				'safe-top': 'env(safe-area-inset-top)',
+				'safe-bottom': 'env(safe-area-inset-bottom)',
+				'safe-left': 'env(safe-area-inset-left)',
+				'safe-right': 'env(safe-area-inset-right)',
 			}
 		}
 	},
