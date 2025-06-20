@@ -49,26 +49,26 @@ const Navigation = () => {
   const isActive = (path: string) => location.pathname === path;
 
   return (
-    <nav className="bg-background/80 backdrop-blur-md border-b border-border sticky top-0 z-50">
+    <nav className="bg-background/95 backdrop-blur-md border-b border-border/50 sticky top-0 z-50 shadow-sm">
       <div className="container mx-auto px-4">
         <div className="flex items-center justify-between h-16">
-          <Link to="/" className="flex items-center space-x-2 flex-shrink-0">
-            <div className="w-8 h-8 bg-gradient-to-br from-blue-600 to-purple-600 rounded-lg flex items-center justify-center">
-              <span className="text-white font-bold text-sm">SE</span>
+          <Link to="/" className="flex items-center space-x-3 flex-shrink-0">
+            <div className="w-10 h-10 bg-gradient-to-br from-primary to-accent rounded-xl flex items-center justify-center shadow-lg">
+              <span className="text-2xl">📋</span>
             </div>
-            <span className="text-xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+            <span className="text-xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
               SurvEase
             </span>
           </Link>
 
-          <div className="flex items-center space-x-4 flex-shrink-0">
+          <div className="flex items-center space-x-4">
             {/* Dark Mode Toggle */}
             <div className="flex items-center space-x-2">
               <Sun className="w-4 h-4 text-muted-foreground" />
               <Switch
                 checked={isDarkMode}
                 onCheckedChange={toggleDarkMode}
-                className="data-[state=checked]:bg-blue-600"
+                className="data-[state=checked]:bg-primary"
               />
               <Moon className="w-4 h-4 text-muted-foreground" />
             </div>
@@ -129,7 +129,7 @@ const Navigation = () => {
                   variant="ghost" 
                   size="sm" 
                   onClick={handleLogout}
-                  className="flex items-center space-x-2 text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-950"
+                  className="flex items-center space-x-2 text-destructive hover:text-destructive hover:bg-destructive/10"
                 >
                   <LogOut className="w-4 h-4" />
                   <span className="hidden sm:inline">Logout</span>
@@ -141,7 +141,9 @@ const Navigation = () => {
                   <Button variant="ghost" size="sm">Login</Button>
                 </Link>
                 <Link to="/register">
-                  <Button size="sm">Sign Up</Button>
+                  <Button size="sm" className="bg-gradient-to-r from-primary to-accent hover:from-primary/90 hover:to-accent/90">
+                    Sign Up
+                  </Button>
                 </Link>
               </div>
             )}

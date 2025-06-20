@@ -1,3 +1,4 @@
+
 import type { Config } from "tailwindcss";
 
 export default {
@@ -61,6 +62,33 @@ export default {
 					'accent-foreground': 'hsl(var(--sidebar-accent-foreground))',
 					border: 'hsl(var(--sidebar-border))',
 					ring: 'hsl(var(--sidebar-ring))'
+				},
+				// Custom red and gold colors
+				'deep-red': {
+					DEFAULT: '#B22222',
+					50: '#F5E6E6',
+					100: '#E8C2C2',
+					200: '#D89999',
+					300: '#C77070',
+					400: '#B94949',
+					500: '#B22222',
+					600: '#9E1F1F',
+					700: '#8A1B1B',
+					800: '#751717',
+					900: '#5C1212'
+				},
+				'soft-gold': {
+					DEFAULT: '#FFD700',
+					50: '#FFFDF0',
+					100: '#FFF8D1',
+					200: '#FFF1A3',
+					300: '#FFEA75',
+					400: '#FFE347',
+					500: '#FFD700',
+					600: '#E6C200',
+					700: '#CCAD00',
+					800: '#B39800',
+					900: '#998300'
 				}
 			},
 			borderRadius: {
