@@ -67,9 +67,9 @@ export default {
 					border: 'hsl(var(--sidebar-border))',
 					ring: 'hsl(var(--sidebar-ring))'
 				},
-				// Strict color scheme - Black, Dark Green only
-				'dark-green': '#013220',
-				'light-green': '#1f4037'
+				// Google Forms violet color scheme
+				'gforms-violet': '#673AB7',
+				'gforms-light-violet': '#9C27B0'
 			},
 			borderRadius: {
 				lg: 'var(--radius)',
