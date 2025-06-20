@@ -1,38 +1,15 @@
 
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { Switch } from '@/components/ui/switch';
 import { useAuth } from '@/contexts/AuthContext';
-import { Home, BarChart3, Users, PlusCircle, User, LogOut, Moon, Sun } from 'lucide-react';
+import { Home, BarChart3, Users, PlusCircle, User, LogOut } from 'lucide-react';
 import { toast } from 'sonner';
 
 const Navigation = () => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
-  const [isDarkMode, setIsDarkMode] = useState(false);
-
-  // Initialize dark mode from localStorage
-  useEffect(() => {
-    const savedDarkMode = localStorage.getItem('darkMode') === 'true';
-    setIsDarkMode(savedDarkMode);
-    if (savedDarkMode) {
-      document.documentElement.classList.add('dark');
-    }
-  }, []);
-
-  const toggleDarkMode = () => {
-    const newDarkMode = !isDarkMode;
-    setIsDarkMode(newDarkMode);
-    localStorage.setItem('darkMode', newDarkMode.toString());
-    
-    if (newDarkMode) {
-      document.documentElement.classList.add('dark');
-    } else {
-      document.documentElement.classList.remove('dark');
-    }
-  };
 
   const handleLogout = async () => {
     try {
@@ -62,17 +39,6 @@ const Navigation = () => {
           </Link>
 
           <div className="flex items-center space-x-1 md:space-x-4">
-            {/* Dark Mode Toggle */}
-            <div className="flex items-center space-x-1 md:space-x-2">
-              <Sun className="w-3 h-3 md:w-4 md:h-4 text-muted-foreground" />
-              <Switch
-                checked={isDarkMode}
-                onCheckedChange={toggleDarkMode}
-                className="data-[state=checked]:bg-primary scale-75 md:scale-100"
-              />
-              <Moon className="w-3 h-3 md:w-4 md:h-4 text-muted-foreground" />
-            </div>
-
             {user ? (
               <div className="flex items-center space-x-1 md:space-x-2">
                 <Link to="/dashboard">

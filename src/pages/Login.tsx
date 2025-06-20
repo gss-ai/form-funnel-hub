@@ -73,7 +73,7 @@ const Login = () => {
     <div className="max-w-md mx-auto mt-8">
       <Card className="border-slate-200 shadow-lg">
         <CardHeader className="text-center">
-          <CardTitle className="text-2xl font-bold bg-gradient-to-r from-emerald-600 to-teal-600 bg-clip-text text-transparent">
+          <CardTitle className="text-2xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
             Welcome Back
           </CardTitle>
           <CardDescription>
@@ -108,7 +108,7 @@ const Login = () => {
             </div>
             <Button
               type="submit"
-              className="w-full bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700"
+              className="w-full bg-gradient-to-r from-primary to-accent hover:opacity-90"
               disabled={!isFormValid || isSubmitting}
             >
               {isSubmitting ? 'Signing In...' : 'Sign In'}
@@ -118,7 +118,7 @@ const Login = () => {
             <span className="text-slate-600">Don't have an account? </span>
             <Link 
               to="/register" 
-              className="text-emerald-600 hover:text-emerald-700 font-medium"
+              className="text-primary hover:text-accent font-medium"
             >
               Sign up
             </Link>
